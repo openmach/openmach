@@ -1,0 +1,80 @@
+[UK22]
+        First release containing expanded set of Linux drivers
+        (including SCSI, block and network; ISA, EISA, VLB and PCI).
+        Conforms to MultiBoot-0.5.  Now works on systems with small
+        memories again.
+
+[UK02p21]
+	First _public_ release containing Shantanu's Linux drivers.
+	The only significant differences from UK02p20 are that
+	Shantanu provided a proper fix for the interrupt disable bug,
+	and upgraded the Linux drivers to more recent versions.
+
+[UK02p20]
+	After fixing interrupt problems, this is the
+	first release containing Shantanu's linux drivers
+	that actually works for us.
+	Also, in this release the kernel has been mostly
+	updated to conform to MultiBoot-0.3.
+	This is an internal release for Shantanu.
+
+[UK02p19]
+	The merged IPC code was causing problems (e.g. incompatibilities
+	with UX due to removed features), so we rolled most of
+	the IPC changes back out.  We left a few very trivial
+	changes in, such as some of the ANSIfied function prototypes.
+
+[UK02p18]
+	Merged in some of the generic IPC code changes from OSF's latest
+	kernel (mk6.1 free).
+
+[UK02p17]
+	First release containing Shantanu's Linux drivers.
+	They don't work yet for us, however.
+	This is a private release for Shantanu Goel to debug
+	and integrate newer versions of his drivers into.
+
+[UK02p16-work]
+	This was a temporary development branch based on
+	the last working release (UK02p16) before we integrated
+	Shantanu's device drivers which didn't work for us
+	at the time.  Many of the changes between UK02p19
+	and UK02p20 were from this branch.
+
+[UK02p16]
+	Private release for Randy Dukes of Novell.
+
+[UK02p15]
+	Added ELF support, so the kernel can be compiled completely
+	using ELF .o's and executables.  '--enable-elf' must be
+	specified on the command line for this to work.
+
+[UK02p13]
+	First release will _all_ of the MK83->MK83a changes merged in
+	(the i386-specific changes didn't make it before).
+
+[UK02p12]
+	Lots of boot-related hacking.
+	Also, integrated low-level mode switching code developed
+	as part of MOSS, the DOS extender based on Mach sources.
+
+[UK02p9]
+	Integrated Shantanu Goel's new floppy and hard drive
+	device drivers for mach.  These are written from scratch,
+	and are not under the GPL.  Also integrated his ports of
+	some Linux Ethernet drivers, which _are_ GPL'd; placed
+	these in a separate kernel/i386at/gpl subdirectory so
+	they can easily be separated out.  Finally, Steve Clawson
+	ported the Linux HPLAN+ driver, and added it to the
+	gpl directory as well.
+
+[UK02p8]
+	Added support for 4.4 BSD fastlinks to the filesystem
+	interpretation code in the server bootstrap program.
+	Lots of other minor changes and fixes, mostly boot-related.
+
+## -----------------------------------------------------------------------
+## This file is in reverse order like a ChangeLog and describes each major
+## tag.  The mach build process grabs the first line of this file to
+## display as part of a version string.
+## -----------------------------------------------------------------------

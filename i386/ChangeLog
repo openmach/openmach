@@ -1,0 +1,807 @@
+Thu Apr 18 22:54:26 1996  steve clawson  <sclawson@marker.cs.utah.edu>
+
+	* configrules: Changed --with-elf option to define __ELF__ instead
+	of ELF.
+	* configure: likewise
+
+	* include/mach/machine/asm.h: Changed references from ELF to
+	__ELF__.
+	* kernel/i386at/boothdr: likewise.
+	* kernel/util/crtn.S: likewise.
+	* libmach/standalone/mach-crt0.c: likewise.
+	
+	* boot/bsd/main.c: Changes to conform with Multiboot 0.6 (adds a
+	checksum field to the multiboot header).  From Erich Boleyn
+	(erich@uruk.org).
+	* boot/linux/misc.c: likewise.
+	* include/mach/machine/multiboot.h: likewise.
+	* kernel/i386at/boothdr: likewise.
+	
+Thu Apr  4 11:02:40 MST 1996  Bryan Ford  <baford@cs.utah.edu>
+
+	* boot/boot_info_dump.c: dump the string associated with
+	each boot module, if any.
+
+	* boot/bsd/main.c: pass along the associated boot module string
+
+	* boot/bsd/mkbsdimage.sh: allow strings to be associated with
+	boot modules, using the syntax "filename:string".
+
+Fri Mar 29 02:00:29 1996  steve clawson  <sclawson@marker.cs.utah.edu>
+
+	* html/mach4-UK22.html: new file.
+	* html/mach4-UK22-linuxdev.html: likewise.
+
+	* configrules: Added --enable-fipc option, which adds -DFIPC to DEFS.
+	* configure: likewise.
+
+Sun Mar 24 13:12:14 1996  Shantanu Goel  <goel@toner.cs.utah.edu>
+
+	* kernel/i386at/model_dep.c: (init_alloc_aligned): Check for end
+	of memory.
+
+Sat Mar 16 20:26:28 1996  Shantanu Goel  <goel@bottles.cs.utah.edu>
+
+	Following changes for new driver emulation framework.
+
+	* kernel/Makerules: Exclude SCSI directories if LINUX_DEV.
+
+	* kernel/i386/iopb.c: Renamed device_t to mach_device_t.
+	Renamed convert_device_to_port to mach_convert_device_to_port.
+
+	* kernel/i386/trap.c: (kernel_trap): Panic if page fault at address
+	0 or kernel text segment.
+
+	* kernel/i386at/autoconf.c: (bus_master_init): Don't probe for
+	block drivers if the kernel is configured to use Linux block
+	drivers.
+	(bus_device_init): Likewise.
+
+	* kernel/i386at/kd.c: Renamed device_t to mach_device_t.
+	  kernel/i386at/iopl.c: Likewise.
+	  kernel/i386at/kd.c: Likewise.
+	  kernel/i386/io_emulate.c: Likewise.
+
+	* kernel/i386at/conf.c: (dev_name_list): Don't include block
+	driver entries if the kernel is configured to use Linux block
+	drivers.
+
+	* kernel/i386at/i386at_ds_routines.c: New file.
+	  kernel/i386at/dev_hdr.h: New file.
+	  kernel/i386at/device_emul.h: New file.
+
+	* kernel/i386at/model_dep.c: (use_all_mem): Set it for LINUX_DEV.
+	(machine_init): Set BIOS warm boot magic.  Unmap page zero after
+	device initialization.
+	(halt_all_cpus): Removed BIOS warm boot magic.
+
+	* kernel/i386at/nhd.c: Don't compile if using Linux drivers.
+
+	* kernel/i386at/gpl/linux/linux_block.c: New file.
+	  kernel/i386at/gpl/linux/linux_emul.h: New file.
+	  kernel/i386at/gpl/linux/linux_misc.c: New file.
+	  kernel/i386at/gpl/linux/linux_sched.c: New file.
+	  kernel/i386at/gpl/linux/linux_version.c: New file.
+
+	* kernel/i386at/gpl/linux/linux_net.c: Rewritten from scratch.
+
+	* kernel/i386at/gpl/linux/block: New directory.  Block drivers
+	from Linux 1.3.68.
+
+	* kernel/i386at/gpl/linux/scsi: New directory.  SCSI drivers from
+	Linux 1.3.68.
+
+	* kernel/i386at/gpl/linux/pci: New directory.  PCI bus support from
+	Linux 1.3.68.
+	
+	* kernel/i386at/gpl/linux/include: All files upgraded to Linux 1.3.68.
+	  kernel/i386at/gpl/linux/net: Likewise.
+	
+	* kernel/intel/pmap.c: (pmap_unmap_page_zero): New function.
+
+Wed Mar  6 18:14:22 1996  steve clawson  <sclawson@marker.cs.utah.edu>
+
+	* include/mach/setjmp.h: Changed definition of jmp_buf[] so that
+ 	it's big enough for NetBSD, FreeBSD and linux's libc setjmp
+ 	functions.  Otherwise their setjmp ends up overwriting useful info
+	in the cthread_t structures.
+
+Tue Mar  5 17:47:59 MST 1996 Linus Kamb  (kamb@cs.utah.edu)
+
+	* Changed kernel/i386at/if_ne.c
+		nerecv() recognizes FIPC_MSG_TYPE packets.
+		nefoutput() called by co-opting d_port_death.
+
+	* Changed kernel/i386at/conf.c
+		maps d_port_death to nefoutput()
+
+Fri Feb 23 19:44:52 1996  Bryan Ford <baford@cs.utah.edu>
+
+	Merged in Erich Boleyn's changes for the latest version of MultiBoot:
+
+	* boot/Proposal: updated to Erich's latest version of the proposal;
+	  bumped the version number to 0.5.
+
+	* include/mach/machine/multiboot.h: added memory descriptions,
+	  ELF symbol table passing support.
+
+	* kernel/i386at/boothdr.S: flag requiring memory info;
+	  receive multiboot_info pointer in ebx instead of eax.
+
+	* kernel/i386at/model_dep.c: new way of finding available memory
+
+	* boot/boot_info_dump.c, boot/boot_start.c, boot/do_boot.S:
+	  updated for new entry protocol and boot_info format.
+
+	* boot/bsd/main.c: updated to pass BIOS memory info.
+
+	* boot/linux/misc.c: [baford] updated to pass BIOS memory info.
+
+Thu Feb 15 18:36:54 1996  steve clawson  <sclawson@marker.cs.utah.edu>
+
+	* kernel/i386/locore.S: added cpu_shutdown() function from OSF
+ 	  Mach mk6.1_free, originally from Dave Slattengren
+ 	  <slatteng@mtxinu.COM>.
+	  
+	* kernel/i386at/kd.c: Made kdreboot() call cpu_shutdown() if 
+	  the attempt to reset the machine through the keyboard controller
+	  dosen't work.
+
+	* kernel/i386at/kd.c: Dosen't include <com.h> anymore, or set 
+	  RCLINE.  This isn't needed with the serial console changes.
+	
+	* kernel/i386at/if_3c503.h: added 3com vendor ID numbers.
+
+	* kernel/i386at/if_ns8390.c: Added code from Linux to check for 
+	  3com's vendor ID in the Etherlink II probe routine.
+
+Tue Feb 13 22:34:27 1996  Kevin T. Van Maren  <vanmaren@fast.cs.utah.edu>
+
+	* kernel/i386at/conf.c: Changed the number of subdevices for the
+	  nhd and sd devices to 2^10 for slice numbering.
+
+	* kernel/i386at/nhd.c: Modified to use the array of partitions
+	  and the common partitioning code.  Disklabels are still there,
+	  but are fairly meaningless to the kernel (except for the basic
+	  geometry information from the BIOS).
+
+	* kernel/i386at/disk.h: minor addition of BAD_BLK from the
+	  old hdreg.h file (which is gone)
+
+	* kernel/i386at/pchd.c: removed as obsolete
+
+	* kernel/i386at/hdreg.h: removed as obsolete
+
+Tue Feb 13 16:22:48 1996  steve clawson  <sclawson@marker.cs.utah.edu>
+
+	* kernel/i386at/if_ne.c: Changed initialization code to follow the
+ 	  National Semiconductor guidelines for setting up the 8390.
+
+Sun Jan 28 22:56:38 MST 1996  Bryan Ford <baford@cs.utah.edu>
+
+	* Checked in major MOSS changes from work at home:
+	  got DPMI support working (Win 3.1, Win95, OS/2)
+	  modulo a few minor incompatibilities;
+	  VCPI and DOS support are fully functional (again);
+	  VCPI and DPMI now support fastints.
+
+Wed Jan 17 17:18:57 1996  Bart Robinson  <lomew@fast.cs.utah.edu>
+
+	* Serial console working for real.
+
+	* kernel/bogus/rc.h: removed RCBAUD and added RCADDR, prettied up.
+
+	* boot/serial.S: added.  This is used by the boot adaptor part,
+	  the rest of the kernel uses mach4/kernel/device/cons.[ch].  This
+	  file was taken from FreeBSD who took it from Mach sometime.
+
+	* kernel/pc/putchar.c: changed to use serial.S if <rc.h> says so.
+
+	* boot/bsd/Makerules: serial.S needs kernel/bogus to be on the -I
+	  list
+
+	* boot/linux/Makerules: ditto
+
+	* kernel/i386at/model_dep.c: changed to call cninit() rather than
+	  kdinit().  Also if booted with -d will call cninit() before
+	  Debugger().  It used to have kd_cnmaygetc call cninit (yuk!)
+
+	* kernel/i386at/console_list.h: removed.  The console is handled
+	  differently now.
+
+	* kernel/i386at/conf.c: console entry in the device list is now
+	  the `virtual' one "cn" instead of "kd"
+
+	* kernel/i386at/cons_conf.c: added.  Defines the constab array
+	  which tells us which console-like things to look for.
+
+	* kernel/i386at/com.c: tweaked to export an interface that
+	  mach4/kernel/device/cons.[ch] wants.  RCBAUD is in here now
+	  rather than rc.h.
+
+	* kernel/i386at/kd.c: ditto
+
+Wed Jan 17 13:51:46 1996  Kevin Van Maren  <vanmaren.cs.utah.edu>
+
+	* Unified the partition code for IDE & SCSI device drivers
+	
+	* kernel/i386at/pc_label.c: deleted
+	* kernel/i386/pc_hd_label.c: deleted (used by hd.c)
+	* kernel/i386/hd.c: deleted (old 'ide' driver)
+
+	* kernel/i386at/nhdreg.h: Removed the definition of PDLOCATION,
+	  should be in <i386at/disk.h> not here!
+	
+	* kernel/i386at/nhd.c: Removed IDE specific PC partition code.
+	  Changed to use the unified partition code.
+
+Mon Oct 30 08:33:01 1995  Bryan Ford <baford@cs.utah.edu>
+
+	* mach4-i386/kernel/i386at/interrupt.S: from Shantanu: proper fix
+	  for interrupt disable bug.
+	* mach4-i386/kernel/i386/spl.S: likewise.
+
+Mon Oct 23 11:08:33 1995  steve clawson  <sclawson@marker.cs.utah.edu>
+
+	* bootstrap/translate_root.c: new file
+	  bootstrap/translate_root.h: likewise
+
+	  Code to convert strange root device encodings (like Linux device
+ 	  numbers) into what Mach wants.
+	
+Sun Oct 22 18:36:49 1995  Bryan Ford <baford@cs.utah.edu>
+
+	* Integrated Steve's and Bart's changes from the UK02p16-work branch.
+
+	* boot: updated booter/kernel interface to be (mostly) conformant
+	  to MultiBoot-0.3 proposal.
+
+	* boot/bsd/crt0.S: pass a boot loader value (Mach/NetBSD/FreeBSD)
+	  as well as boothowto and bootdev.
+
+	* boot/bsd/main.c: Fabricate a proper MultiBoot kernel command line
+	  from the boothowto and bootdev values.
+
+	* boot/bsd/main.c: Cleaned up symbol table loading, so it should
+	  work with all a.out format variants.
+
+	* boot/bsd/main.c: Provide the kernel info on the device we booted from.
+
+	* mach4-i386/kernel/i386at/model_dep.c: MultiBoot-0.3 compliance.
+
+	* mach4-i386/kernel/i386at/interrupt.S: mostly fix interrupt nesting
+	  problem with Linux driver changes.
+
+Mon Oct 16 14:49:01 1995  steve clawson  <sclawson@marker.cs.utah.edu>
+
+	* boot/bsd/crt0.S: Now should be able to differentiate between
+	  the original Mach bootblocks, the old BSD (which NetBSD uses)
+	  bootblocks and the new-style FreeBSD bootblocks.  
+
+Fri Oct 13 16:59:10 1995  steve clawson  <sclawson@marker.cs.utah.edu>
+
+	* boot/boot_info.c: Add code to add the symbol table into the 
+	  occupied list that we hand to the kernel.
+
+	* boot/bsd/crt0.S: Added in code to pass along the boothowto and
+	  bootdev.  We should be able to tell between Mach, FreeBSD and
+	  NetBSD bootblocks, but we don't tell anyone about it yet.
+
+	* boot/bsd/main.c: Now tries to find the kernel symbol table and
+	  put it into a `safe' place for the kernel to grab later.  It
+	  also sets the bsd_boothowto and bsd_bootdev fields of the 
+	  boot_info struct.
+
+	* bootstrap/exec.c: Enabled code to load symbol tables.
+
+	* kernel/i386/setroot.c: Changed code to work with BSD bootblocks
+	  (and their major device numbering...sd == 4, instead of 3).
+
+	* kernel/i386at/model_dep.c: Now sets kern_sym_start and
+  	  kern_sym_size from boot_info, along with boothowto and
+	  bootinfo from the bootblocks.
+
+Wed Oct  4 20:04:27 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+	Released moss-0.80 (tag moss-0-80)
+
+Wed Oct  4 12:05:57 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+	Merged in changes made for DOS extender at home:
+	* added mach/i386/debug_reg.h,
+	  containing definitions for accessing the debug registers.
+	* changed i16 code to add physical memory to the malloc pool
+	  (assuming we're using the lmm to handle the malloc pool).
+
+Tue Oct  3 13:22:50 1995  steve clawson  <sclawson@marker.cs.utah.edu>
+
+	* kernel/pc/i16/i16_raw.c: baford's changes to work with gcc
+	  2.7.0.
+	  boot/boot_start.c: Likewise.
+
+Thu Sep 28 17:37:44 1995  steve clawson  <sclawson@marker.cs.utah.edu>
+
+	* Makefile.in: added image, bsdimage and linuximage targets.
+  	  image will build both the linux and bsd images (Mach and zMach),
+ 	  in the Object directory, the others will only build their their
+ 	  respective images.
+
+	* kernel/bogus/hpp.h: Changed #define to be 1, so that the driver
+	  is included by default.
+
+	* kernel/i386at/autoconf.c: Changes for NE2000.
+	  kernel/i386at/conf.c: Likewise.
+	  kernel/i386at/if_ne.c: NE2000 driver.
+	  kernel/i386at/if_nereg.h: NE2000 driver header file.
+
+	* kernel/i386at/gpl/if_hpp.c: Changed #include of vm_param.h to
+   	  "vm_param.h", since it wasn't getting found in the usual place.
+	  kernel/i386at/gpl/if_ul.c: Likewise.
+	  kernel/i386at/gpl/if_wd.c: Likewise.
+	
+	
+Fri Aug 25 23:39:19 1995  Shantanu Goel  <goel@monk.mcl.cs.columbia.edu>
+
+	* kernel/i386/hardclock.c: (cold): Deleted.  The Linux code now
+	uses its own clock interrupt handler.
+
+	* kernel/i386/spl.S: Use EXT to reference global variables.
+
+	* kernel/i386/spl.h: spl_t must be int; asm code assume this.
+
+	* kernel/i386at/autoconf.c: Changed default IRQ for "wd" to 9.
+	(probeio): Don't compare dev->ctlr against -1.  GCC 2.7.0 doesn't
+	like it.
+
+	* kernel/i386at/interrupt.S: (interrupt): Removed check
+	for spurious interrupts.
+
+	* kernel/i386at/model_dep.c: (cold): Deleted.
+	(startrtclock): Deleted check against multiple invocations;
+	it's no longer needed.
+
+	* kernel/i386at/pic_isa.c: (intpri): Initialize clock interrupt
+	priority to 0 to disable clock interrupts.
+
+	* kernel/i386at/gpl/linux/linux_dma.c:
+	(linux_request_dma, linux_free_dma): Made function declarations
+	consistent with prototype.
+
+	* kernel/i386at/gpl/linux/linux_init.c: (linux_init): Deleted
+	call to startrtclock().  Install temporary clock interrupt handler
+	for Linux device initialization.
+
+	* kernel/i386at/gpl/linux/linux_net.c: (linux_net_dev_init): Added
+	entries for SEEQ8005, HP100, and Intel EtherExpress Pro.
+	(linux_alloc_skb): No longer takes a 2nd argument in accordance
+	with Linux 1.3.x.
+	(net_soft): Cleaned up DMA handling.
+
+	* kernel/i386at/gpl/linux/linux_port.c: (linux_request_region): Made
+	function declaration consistent with prototype.
+
+	* kernel/i386at/gpl/linux/linux_printk.c: Get GCC's stdarg.h.
+
+	* kernel/i386at/gpl/linux/linux_vsprintf.c: Get GCC's stdarg.h.
+
+	* kernel/i386at/gpl/linux/net:  All files in this directory
+	have been upgraded to Linux 1.3.20.
+
+Mon Jun 26 12:41:56 MDT 1995  Miles Bader <miles@gnu.ai.mit.edu>
+
+	* boot/boot_start.c: changed "m" asm constraints to "rm"
+	  to make gcc 2.7.0 happy.
+	* kernel/pc/i16/i16_raw.c: avoid using #ifdef's
+	  in the middle of macro invocations; gcc 2.7.0 doesn't like them.
+
+Fri May 19 11:17:13 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+	* Released UK02p17, as a private snapshot for goel.
+
+Tue May 16 00:59:56 1995  Shantanu Goel  <goel@monk.mcl.cs.columbia.edu>
+
+	* configure: Recognise --enable-linuxdev.
+
+	* kernel/Makerules: Recognise LINUX_DEV.
+	  Don't compile ported Linux drivers if using the native Linux ones.
+
+	* include/mach/machine/asm.h (TEXT_ALIGN, DATA_ALIGN): New defines.
+
+	* kernel/i386/ipl.h (NSPL): New define.
+	  (intpri): Make type int.
+	  (SPLHI, SPL7, IPLHI): Defined to be 7.
+
+	* kernel/i386/pic.h (PIC_MASTER_ICW, PIC_MASTER_OCW): New defines.
+	  (PIC_SLAVE_ICW, PIC_SLAVE_OCW): New defines.
+
+	* kernel/i386/pic.c (pic_mask, curr_pic_mask): Make type int.
+	  (NSPL): Use it.
+
+	* kernel/i386/spl.S: Rewritten from scratch.
+
+	* kernel/i386/hardclock.c (hardclock): Linux support changes:
+
+		* Don't call the Mach interrupt handler during configuration.
+
+		* Never pass SPL0 flag to clock_interrupt.
+
+		* Handle Linux timers.
+
+	* kernel/i386at/conf.c: Added entries for Linux network drivers.
+	  Disable native Mach drivers when using the Linux ones.
+
+	* kernel/i386at/autoconf.c: Disable probing of native Mach drivers
+	  when using the Linux ones.
+	  Disable printer driver when using Linux drivers because
+	  it blindly allocates the irq, causing conflicts with the parallel
+	  port Linux network drivers.
+
+	* kernel/i386at/model_dep.c (machine_init): Call linux_init.
+	  (alloc_dma_mem): Modified so it can be called any time while
+	  the system is running.  Interface changed.
+	  (startrtclock): Protect against multiple invocations.
+
+	* kernel/i386at/nfd.c (fdprobe): Updated call to alloc_dma_mem
+	  to account for interface change.
+
+	* kernel/i386at/interrupt.S: Rewritten from scratch.
+
+	* kernel/i386at/pic_isa.c (intpri): Make type int.
+
+	* kernel/i386at/gpl/linux: Directory and files under it added.
+	  These provide native Linux network driver support.
+
+Fri May  12 10:47:41 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+	* Released UK02p16, as an internal snapshot for rdukes
+
+Wed May  3 10:47:41 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+	* Released UK02p15.
+	  (UK02p14 was just an intermediate tag after adding ELF support.)
+
+	Configuration-related changes:
+
+	ELF support changes:
+
+	* configure: set 'enable_elf' if user specifies --enable-elf.
+
+	* include/mach/machine/asm.h: don't add underscores to symbols if ELF.
+
+	* All over: make proper use of EXT/LEXT/ENTRY macros
+	  instead of assuming all public symbols are prefixed with underscores.
+
+	* boot/bsd.main.c: if a.out-kludge bit isn't set, use exec_load()
+	  from libmach_exec.a to interpret the boot image executable header.
+
+	* kernel/i386/fpe.b_elf: created a uuencoded ELF version of fpe.b
+
+	* libmach/loader_info.c: deleted, became libmach/exec/a_out.c.
+
+	Miscellaneous changes:
+
+	* Makeconf.in: got rid of LD86 and AS86; no longer needed
+
+	* Makerules: various cleanups and fixes, ELF stuff.
+
+	* include/mach/machine/vm_param.h: Moved private kernel parts
+	  to kernel/i386/vm_param.h.
+
+	* kernel/dos/*: added a bunch of Unix-like low-level file I/O
+	  routines that translate to the appropriate DOS software interrupts.
+
+	* kernel/i386/seg.h: use MACH_INLINE macro for inline functions.
+
+	* kernel/i386at/eisa.h: added from MK83a, was missing for some reason.
+
+Fri Apr  7 17:43:22 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+	* Released UK02p13.
+
+	* Got rid of the UK02-freeze branch in the i386 tree.
+	  As a result, all the MK83a changes in this tree are now merged in.
+
+Fri Apr  7 14:19:55 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+	* Merged in diffs from UK02p9 to UK02p12:
+
+	Mon Apr  3 19:55:41 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+		* Released UK02p11.
+		  Too many changes to describe concisely,
+		  almost all affecting only the boot mechanism for now.
+		  Also, integrated the kernel/util, kernel/pc, kernel/dos code
+		  from my DOS extender project at home.
+
+	Mon Feb 27 16:32:59 MST 1995  Bryan Ford <baford@cs.utah.edu>
+
+		* Released UK02p10 as a non-functional snapshot
+
+Fri Feb 10 13:25:54 MST 1995  Bryan Ford <baford@cs.utah.edu>
+
+	Merged in diffs from UK02p7 to UK02p9:
+
+	Tue Jan 17 15:55:01 MST 1995  Bryan Ford <baford@cs.utah.edu>
+
+		* Released UK02p8
+
+	Tue Jan 17 12:03:37 MST 1995  Bryan Ford <baford@cs.utah.edu>
+
+		* boot/bsd/Makerules: BSD default boot image is now
+		  named 'Mach.all' instead of 'boot.all'.
+
+	Sat Jan 14 15:13:54 MST 1995  Bryan Ford <baford@cs.utah.edu>
+
+		* libmach/unixoid/Makefile: enable building libmach.a
+		  only if user specifies --enable-libmach to configure.
+
+	Fri Jan 13 15:14:43 1995  steve clawson  <sclawson@fast.cs.utah.edu>
+
+		* Integrated Shantanu Goel's new floppy and hard drive 
+		  device drivers. (sg@jahil.cs.columbia.edu)
+
+		  * kernel/i386at/nhd.c: Rewritten from scratch.
+		    kernel/i386at/nhdreg.h: Likewise.
+		    kernel/i386at/nfd.c: Likewise.
+		    kernel/i386at/nfdreg.h: Likewise.
+
+		  * kernel/i386at/model_dep.c:
+		    Added alloc_dma_mem().
+
+		  * kernel/bogus/fd.h:
+		    Set NFD to 4 to include floppy support.
+
+		* Added an #if 0/#endif wrapper around:
+		    kernel/i386/pc_hd_label.c
+		    kernel/i386at/pchd.c
+		    kernel/i386at/hd.c
+		    kernel/i386at/fd.c
+
+	Fri Jan 13 14:56:35 1995  steve clawson  <sclawson@fast.cs.utah.edu>
+
+	       * added .../kernel/i386at/gpl directory to hold gpl'd
+		  code (currently it holds ethernet drivers ported from
+		  Linux).
+
+	       * Integrated Shantanu Goel's ethernet driver ports from 
+		 Linux into the gpl directory. (sg@jahil.cs.columbia.edu)
+
+		 * kernel/i386at/gpl/if_ns.c: New file.   
+		   kernel/i386at/gpl/if_nsreg.h: New file.
+		   kernel/i386at/gpl/if_ul.c: New file.
+		   kernel/i386at/gpl/if_wd.c: New file.
+		   kernel/bogus/ul.h: New file.
+		   kernel/bogus/wd.h: New file.
+
+		 * kernel/i386at/autoconf.c:
+		   Added entries for new drivers, "ul", "wd".
+
+		 * kernel/i386at/conf.c:
+		   Added entries for new drivers, "ul", "wd".
+
+		 * kernel/i386at/if_ns8390.c:
+		   Compile file only #if NNS8390 > 0.  This and if_wd.c 
+		   are probably mutually exclusive. (ie. don't try and stick
+		   both in your kernel...)
+
+		* Added HP PC LAN Plus support code ported from Linux.
+
+		  * kernel/i386at/gpl/if_hpp.c: New file.	
+		    kernel/bogus/hpp.h: New file.
+
+		  * kernel/i386at/autoconf.c:
+		    Added entry for new driver, "hpp".
+
+		  * kernel/i386at/conf.c:
+		    Added entry for new driver, "hpp".
+
+		* kernel/i386at/gpl/if_ns.c: nsintr(): Added back in the 
+		  code to read the counter values from the card if they
+		  overflow.  The HP PC LAN Plus needs to have this (just 
+		  acking the interrupt dosen't reset the counters on the 
+		  card I've got).
+		  
+	13 Jan 1995 19:53:53 +0100 (MET) Remy.Card@masi.ibp.fr (Remy CARD)
+
+		* libmach/unixoid/Makefile.in: reenabled building of libmach.a.
+
+	Fri Jan 13 14:52:42 MST 1995  Bryan Ford <baford@cs.utah.edu>
+
+		* libmach/loader_info.c: fixed bug interpreting QMAGIC executables.
+
+Fri Nov 25 13:56:32 MST 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	Merged in diffs from UK02p6 to UK02p7:
+
+	Sun Nov 20 11:56:51 MST 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* Changed the ifdefs referring to '__liXnux__' back to '__linux__'
+	  so that partition interpretation will once again default to
+	  standard PC-style when compiled on a Linux machine.
+	  If you're cross-compiling from Linux and want BSD partitioning
+	  anyway, add '-U__linux__' to the DEFINES line in Makeconf.
+
+	* Modified Alvin's compressed boot image mechanism slightly
+	  so the Linux-derived files can be taken _completely_
+	  unmodified from the Linux kernel source distribution.
+	  Easier to keep up-to-date this way.  Also created a little
+	  shell script to update these files automatically.
+
+	* Separated out the 'mkbootimage' script and supporting stuff
+	  into a separate 'boot/bsd' subdirectory, just like the
+	  Linux boot image stuff was separated out.  Now the top-level
+	  'boot' directory contains _only_ stuff related to
+	  boot _modules_.
+
+	* The top-level Makefile is no longer responsible for creating
+	  the "default boot image" containing all available boot modules.
+	  Instead, boot/bsd/Makefile now produces a default 32-bit boot
+	  image ('boot.all'), and boot/linux/Makefile produces a
+	  default 16-bit compressed Linux boot image ('zMach.all').
+
+	* Cleaned up the console code a little bit.
+
+	Mon Nov 14 22:50:57 -0500 1994  Alvin Starr <alvin@eyepoint.com>
+
+	* Separated out the Linux boot image creation mechanisms
+	  into a separate 'boot/linux' subdirectory, and changed
+	  it to produce compressed Linux boot images.  The Linux
+	  boot images produced are now _exactly_ like those
+	  produced by Linux, in that they use all the same 16-bit
+	  setup code and decompression code and everything.
+	  This also means you can 'dd' one of these boot images
+	  straight onto a floppy to create a Mach boot floppy.
+
+	  To create compressed Linux boot images now, use the
+	  new 'mkliloimage' script.  It works just like 'mkbootimage'.
+
+	  The old 'mkbootimage' script is still there, but is greatly
+	  simplified since it no longer needs to produce Linux-compatible
+	  boot images at all.  One side-effect of this is that the
+	  32-bit boot images produced by this script will be in the
+	  "native" executable format of the build environment in use.
+	  For example, if you build under NetBSD, the produced 32-bit
+	  boot images will load fine from BSD boot blocks, but probably
+	  not from Mach boot blocks, because the Mach boot blocks don't
+	  know about BSD's newer a.out format.
+
+	* Enabled SCSI drivers.
+
+	* God kernel debugger working again.
+
+	* Changed kd.c to handle tabs correctly.
+
+	Fri Sep 30 21:38:31 1994  Patrick Doyle  (wpd@peanutbutter)
+
+	* Makefile.in
+	  (SORTED_SUBDIRS):
+	    Added a macro to generated a "sorted" list of subdirectories
+	    such that those listed in $(FIRST_SUBDIRS) are first.  Changed
+	    the "all" and "install" rules to use this macro so we don't
+	    have to descend into those subdirs twice.  (Idea was stolen
+	    from glibc makefile).
+	  (boot.all):
+	    Added rule to generate "boot.all" in the top level object
+	    directory and changed "all" to create this target.
+
+Sat Oct 22 14:59:03 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* Incorporated tons of minor changes and additions
+	  produced by my Mach-based DOS extender project.
+	  Mostly involved cleaning up and adding to libmach_sa.
+
+Tue Oct 25 12:32:28 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* Released UK02p6.
+
+	* Moved exec header interpretation stuff from the bootstrap code
+	  into libmach so the kernel could also use it when initializing
+	  the bootstrap program itself.
+
+Fri Sep 16 11:33:44 MDT 1994  Bryan Ford (baford@cs.utah.edu)
+
+	* Fixed a bug in locore.S that caused occasional
+	  "null pv_list" panics from within pmap.c.
+
+	* Fixed a bug in pmap.c: forgot to clear the kernel
+	  page directory before initializing (only part of) it.
+
+Fri Sep  9 10:45:26 MDT 1994  Bryan Ford (baford@cs.utah.edu)
+
+	* Added kernel/imps directory 
+	  for Intel MultiProcessor Spec compliant PCs;
+	  only enabled if user specifies --enable-mp.
+
+	* boot image building scripts: exit when errors occur
+
+	* boot/mkbmod.sh: changed -s to -no-strip to avoid confusion
+
+Thu Sep  8 16:51:15 MDT 1994  Bryan Ford (baford@cs.utah.edu)
+
+	* bootstrap/exec.c:
+	  support NetBSD big-endian ZMAGIC executables
+
+	* include/Makefile.in:
+	  fixed installation directories
+
+Tue Sep  6 08:49:39 1994  Patrick Doyle  (wpd@peanutbutter)
+
+	* Makefile.in (install): Changed "install" rule so that it doesn't
+	  gratuitously reinstall boot.all.
+
+Mon Sep  5 12:11:45 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* Full cross compilation support
+
+	* Changed default Mach boot image filename
+	  from `machboot' to just `boot'.
+
+	* Automatically create a `boot.all' upon installation
+	  containing all boot modules.
+
+Sat Sep  3 07:13:44 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* Bugfix: boot code didn't clear NT flag properly,
+	  and the VTech Platinum BIOS was leaving it set.
+
+	* Added get_esp() and get_eflags() in proc_reg.h.
+
+	* Added debug_trace facility.
+
+	* bootstrap/exec.c: got rid of #ifdef __linux__'s;
+	  instead, support both at once and detect at runtime.
+
+	* include/mach/machine/disk.h,
+	  kernel/i386/pc_hd_label.c:
+	  hacked #ifdef __linux__'s to #ifdef __liXnux__
+	  to get back to BSD-style partition table interpretation.
+
+Fri Aug 26 09:52:35 1994  Jeff Law  (law@fast.cs.utah.edu)
+
+	* configure: Add "-print" argument to find so that it works with
+	non-GNU finds. 
+
+Mon Aug 1 18:15:00 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* Got most of the migrating threads changes merged in
+
+Mon Aug  1 14:45:52 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* Integrated Louis-D. Dubeau's pchd (PC hard drive) patches.
+
+
+Wed Jul 20 14:00:45 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* include/Makefile: top-level header files weren't getting installed.
+
+	* Moved kernel i386/eflags.h to include/mach/machine/eflags.h,
+	  so outsiders such as LITES can use it if they want to.
+
+	* Released UK02
+
+
+Fri Jul 15 11:46:19 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* Kernel address space and physical memory
+	  is now mapped at virtual address 0 instead of 0xC0000000.
+	  (It's still up high in linear memory,
+	  but the kernel segment registers are used to shift addresses.)
+
+	* All copyin/copyout code now uses segment registers
+	  to access user space, like Linux does.
+
+	* Separated the console stuff out of kd.c and into (new) console.c.
+	  No longer initialize the console at the very beginning in i386_init;
+	  instead do it with the rest of the devices, in machine_startup.
+
+	* console.c: Created a kludgy little "immediate console" for kernel debugging
+	  which spews things onto a CGA/EGA/VGA display
+	  without requiring _any_ initialization first.
+	  It gets disabled automatically when the real console is initialized.
+
+	* include/mach/boot_info.h: deleted, because it was only for the old
+	  `makeboot'-based server bootstrap mechanism.
+	  Superseded by the new include/mach/boot.h.
+
+	* Lots of other minor changes.
+

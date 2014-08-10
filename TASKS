@@ -1,0 +1,39 @@
+Quick fixes:
+
+* Make the build environment work when object and source directories 
+  are the same, or else make configure print an error message if
+  the user tries to put them in the same place.
+
+
+Minor modifications:
+
+* Document the new boot image stuff - scripts, utilities, etc.
+
+* Get partition table interpretation to work
+  for both Linux and DOS partition
+
+* Generate public .h files from .defs files
+  in the include/ object directory instead of libmach/.
+
+* Rename HOST to BUILD and TARGET to HOST throughout the build environment.
+  While I'm at it, rename GSRCDIR to GENTREE, MSRCDIR to I386TREE
+  or PATREE, and DSRCDIR to DOSTREE.  Or something like that.
+
+* All the stuff in Michael Bushnell's tasks file for the Hurd.
+
+
+Major modifications:
+
+* Support BIOS calls from Mach.  Linux needs this too.  Partly done already.
+
+* Integrate migrating threads and the presentation IPC system.
+
+* Make a new boot loader that's backward-compatibile with LILO
+  and the Mach/BSD boot loaders, but fixes some of their more glaring problems.
+
+
+Grandiose dreams:
+
+* Support device drivers from other operating systems,
+  such as Linux, NetWare (ODE/NPA), Windows, NT, SCO, etc.
+

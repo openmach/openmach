@@ -1,0 +1,97 @@
+This file contains a list of all known Mach subsystems,
+and the MIG code ranges they use.
+
+Mach kernel:
+
+	notify			     64	mach/notify.defs
+
+	mach			   2000	mach/mach.defs
+
+	memory_object		   2200	mach/memory_object.defs
+
+	memory_object_default	   2250	mach/memory_object_default.defs
+
+	default_pager		   2275	mach/default_pager.defs
+
+	exc			   2400	mach/exc.defs
+
+	mach_host		   2600	mach/mach_host.defs
+
+	device			   2800	device/device.defs
+					device/device_request.defs
+				   	device/device_reply.defs
+
+	mach_debug		   3000	mach_debug/mach_debug.defs
+
+	mach_port		   3200	mach/mach_port.defs
+
+	mach4			   4000	mach/mach4.defs
+
+	mach_norma		 555000	mach/mach_norma.defs
+
+	norma_task		 666000	mach/norma_task.defs
+
+	dp_helper		 888888	mach/default_pager_helper.defs
+
+	bootstrap		 999999	mach/bootstrap.defs
+
+
+Mach servers:
+
+	netname			   1040	servers/netname.defs
+
+	machid			9829283	servers/machid.defs
+
+	machid_debug		2398925	servers/machid_debug.defs
+
+	machid_dpager		6357721	servers/machid_dpager.defs
+
+
+GNU Hurd:
+	fs			  20000	hurd/fs.defs
+
+	fs_notify		  20500	hurd/fs_notify.defs
+
+	io			  21000	hurd/io.defs
+					hurd/io_request.defs
+					hurd/io_reply.defs
+
+	fsys			  22000	hurd/fsys.defs
+				  	hurd/fsys_reply.defs
+
+	msg			  23000	hurd/msg.defs
+					hurd/msg_request.defs
+					hurd/msg_reply.defs
+
+	process			  24000	hurd/process.defs
+				  	hurd/process_reply.defs
+
+	auth			  25000	hurd/auth.defs
+	auth_reply		  	hurd/auth_reply.defs
+
+	socket			  26000	hurd/socket.defs
+
+	newterm			  27000	hurd/newterm.defs
+
+	term			  28000	hurd/term.defs
+
+	startup			  29000	hurd/startup.defs
+					hurd/startup_reply.defs
+
+	exec			  30000	hurd/exec.defs
+
+	core			  32000	hurd/core.defs
+
+	interrupt		  33000	hurd/interrupt.defs
+
+	ifsock			  34000	hurd/ifsock.defs
+
+	login			  36000	hurd/login.defs
+
+	tioctl			 156000	hurd/tioctl.defs
+
+	mioctl			???????	hurd/mioctl.defs
+
+	kernel_boot		 999999	hurd/kernel_boot.defs
+
+

@@ -1,0 +1,195 @@
+<html>
+<head><title>Installation</title></head>
+<body>
+<h1>Installation</h1>
+<hr>
+
+<em>Note: on the PA-RISC, read <a href="../../mach4-parisc/html/install-parisc.html">
+that section</a> first and this page after, since this has x86
+assumptions scattered throughout.</em>
+
+
+<h2>Requirements</h2>
+
+You will need the following programs installed and available in order
+to compile this version of Mach:
+
+<ul>
+<li>	<b>GNU make.</b>
+	You can name it whatever you want
+	(e.g. you can install it as `gmake' if you already
+	have another version of make that you want to keep).
+
+<li>	<b>GNU awk</b>,
+	or another version of awk that has a `toupper()' function.
+	If you call it `gawk', it will be used instead of `awk'.
+</ul>
+
+If you're building under Linux, you probably already have these.
+If you're building under BSD or something else,
+you may need to get them.
+<p>
+
+Of course, if you're going to cross-compile Mach,
+you need the appropriate cross-development tools.
+See the section on <a href="#cross">cross-compilation</a> below.
+<p>
+
+To learn more of the gory details of how the new build environment works,
+see the page on <a href="build-env.html">the build environment</a>.
+<p>
+
+<h2>Quick Start</h2>
+
+The new build environment pretty much follows the standard GNU guidelines.
+The major exception is that, unlike other GNU software,
+the machine-independent and machine-dependent parts of the source distribution
+come in separate source trees.
+This is because,
+due to its low-level microkernel nature,
+an unusually high percentage of Mach source code is machine-dependent.
+If all available machine-dependent ports of Mach
+were included in a single source tree along with the machien-independent code,
+the source distribution would quickly grow very large,
+with most of its contents being useless to any given person.
+<p>
+
+To configure the system, unpack the machine-independent and
+machine-dependent source trees (e.g. "mach4" and "mach4-i386")
+somewhere, create a separate object directory to build into, and run
+the configure script in the machine-dependent source tree from within
+the object directory.  (Currently the object directories MUST be
+SEPARATE FROM the source directories.)  If you're using a version of
+Mach4 earlier than UK02p21, then you'll have to specify the location
+of the machine-independent source tree on the configure command line
+with a "--with-mach4=DIR" option.  Finally, type `make -r' or `make -r
+install' to build the kernel and optionally install it.  (You don't
+actually have to use `-r', but GNU make runs faster if you do.)  For
+example: <p>
+
+<pre>
+tar xvzf /tmp/mach4.tar.gz
+tar xvzf /tmp/mach4-i386.tar.gz
+mkdir obj
+cd obj
+../mach4-i386/configure --with-mach4=../mach4
+make -r 
+make -r install
+</pre>
+<p>
+
+All installed files will go into directories named relative to the
+prefix you specify on the configure command line, or `/usr/local'
+by default, as per normal GNU conventions.
+If all goes well,
+an appropriate boot image should be created in the object directory,
+which you can use to boot Mach.
+<p>
+
+For machine-specific details on installing and booting Mach,
+see the following pages:
+<ul>
+<li>	<b><a href="../../mach4-i386/html/install-i386.html">i386</a></b>
+<li>	<b><a href="../../mach4-parisc/html/install-parisc.html">PA-RISC</a></b>
+</ul>
+<p>
+
+
+<h2><a name="options">Options</a></h2>
+
+This section describes the machine-independent command-line options you can supply
+on the command line when you run the <b>configure</b> script.
+Note that there may also be machine-independent options;
+see the appropriate pages above for more details.
+<p>
+
+<b>--enable-debug</b>:
+Turns on various kernel debugging features,
+such as extensive sanity checks and (on the i386) the kernel debugger.
+<p>
+
+<b>--enable-libmach</b>:
+Enables generation of the CMU UX server-specific library <b>libmach.a</b>.
+Generally only needed in order to compile programs in the CMU USER distribution.
+Other Mach servers, such as those in Lites and the Hurd,
+only use the (more) personality-neutral standalone library <b>libmach_sa.a</b>.
+<p>
+
+
+<h2><a name="cross">Cross Compilation</a></h2>
+
+(Note:  Since setting up the build environment for cross-compilation
+I've been informed that I used the wrong terminology.
+In particular,
+where I referred to the "host" machine
+I should have said "build" machine
+(the machine the program is built on),
+and where I referred to the "target" machine
+I should have said "host" machine
+(the machine the program will run on).
+The term "target" really only applies to cross-compilation tools,
+such as a cross-compiling C compiler;
+it means the machine the resulting program will compile things <i>for</i>.
+I will probably fix the terminology in the Mach build environment
+and the corresponding documentation at some point,
+but for now I'm afraid we're stuck with it.)
+<p>
+
+With the new build environment you can easly cross compile Mach from a different
+architecture and/or OS.  To cross compile from a different (non-Mach) OS but
+on the same processor architecture, you normally shouldn't have to do anything
+special; the "normal" procedure above is known to work on Linux anyway.
+If you have any problems, try the cross compilation procedure described below.
+<p>
+
+To cross compile from a different architecture, you will have to have all the
+standard cross-development tools built.  In particular, Mach requires cross
+development versions of gcc, gas, ld, ar, and ranlib.  You can get all these
+from prep.ai.mit.edu:/pub/{gcc-*,gas-*,binutils-*}.  Just build and install
+them as the INSTALL files say to, using the `--target=' option to specify
+the target architecture and OS (e.g. `--target=i386-gnu').  It will probably
+be easiest if you install them in the same place your ordinary compiler is
+located: for example, use `--prefix=/usr' if gcc et al is in /usr/bin.  As
+long as the new tools are configured for cross development, they will not
+overwrite the native tools that are already there, because they are given
+names prefixed with the target specification, e.g. `i386-gnu-gcc'.
+<p>
+
+Be sure to build and install gas and binutils <b>before</b> GCC.  Even then, GCC may
+fail to compile completely because of missing header files (probably stdio.h).
+If it fails while trying to build libgcc2.a, then you've gotten far enough for
+the purposes of Mach - the compiler has already been built, and you can just
+`make install' at that point and go back to Mach.
+<p>
+
+To cross compile Mach itself, the only additional thing you need to do is tell
+the Mach build environment where to find the cross compilation tools.  The
+normal GNU way to do this, I understand, is to specify the tools as variable
+overrides on the `make' command line; e.g. `make CC=i386-gnu-gcc LD=...'
+You can do it this way if you want; if you do, you'll need to set the variables
+CC, LD, AR, STRIP, and RANLIB.
+<p>
+
+However, with this Mach distribution, there's an easier way.  If you specify
+a --target option on the command line when running Mach's configure script,
+(e.g. `--target=i386-gnu'), then the makefiles will automatically be set up
+with the default names of the development tools it uses prefixed with the
+target name (e.g. `i386-gnu-gcc' etc.).  You can still override those defaults
+on the `make' command line, but it should not be necessary to if your tools
+are named according to the standard conventions and are in your path.
+<p>
+
+Note that the LILO boot configuration requires an as86 and ld86 to
+assemble. These are available on linux, but I do not know of any cross
+versions of these programs. (I haven't yet tried to compile them
+anywhere other then linux.) Therefore, if you want your kernel to be
+bootable with LILO, you must find a way to get bootsetup (in mach4-i386/boot)
+assembled and linked. A cross build that does not have the x86 tools
+available will simply fail to make LILO-compatible boot images for you;
+the resulting boot images will still boot from NetBSD or Mach boot blocks
+however.
+<p>
+
+<hr>
+</body>
+</html>

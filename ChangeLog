@@ -1,0 +1,703 @@
+Thu Mar 28 17:59:36 1996  Linus Kamb  <kamb@cs.utah.edu>
+
+	* kernel/ipc/fipc.c:
+
+		changed fipc_send() to take a fipc_endpoint_t structure
+ 		which has the destination hardware address and destination
+ 		port, instead of the two integer arguments used before.
+
+		changed fipc_recv() to also take a fipc_endpoint_t
+ 		parameter that returns the senders hardware address.
+  		(Their is no concept of a sending fipc port.)
+
+		Also added some spl stuff to avoid a possible race
+ 		condition, and generally cleaned it up.
+
+	* include/mach/syscall_sw.h: changed the argument #'s for fipc calls.
+
+	* kernel/kern/syscall_sw.c: changed the argument #'s for fipc calls.
+
+	* kernel/device/device_init.c: Changed call to fipc_thread() 
+		to call to fipc_init().
+
+Mon Mar 25 01:39:45 1996  steve clawson  <sclawson@marker.cs.utah.edu>
+
+	* changes for VM_PROT_NOTIFY added for Godmar Back
+	(gback@cs.utah.edu):
+	
+	* include/mach/kern_return.h: Added KERN_WRITE_PROTECTION_FAILURE
+	return value.
+
+	* include/mach/vm_prot.h: Added VM_PROT_NOTIFY.
+
+	* kernel/vm/vm_map.c (vm_map_protect): or in VM_PROT_NOTIFY
+	when we check the new protection against max protection (should
+	always be able to set the NOTIFY bit, ).
+
+	* kernel/vm/vm_map.c (vm_map_lookup): If VM_PROT_NOTIFY is set and
+	we get a write protection violation, return
+	KERN_WRITE_PROTECTION_FAILURE.
+	
+	* kernel/vm/vm_user.c (vm_protect): Make sure that we accept
+	VM_PROT_NOTIFY (since it's not in VM_PROT_ALL).
+
+Sun Mar 24 13:17:45 1996  Shantanu Goel  <goel@toner.cs.utah.edu>
+
+	* kernel/device/dev_hdr.h: Following changes #ifdef'ed for i386.
+	Include i386at/dev_hdr.h.
+	(device): Renamed to mach_device.  All users changed.
+	(device_t): Renamed to mach_device_t.  All users changed.
+
+	* kernel/device/dev_lookup.c: Following changes #ifdef'ed for i386.
+	(dev_port_enter): Initialize emulation ops and data.
+	(convert_device_to_port): Use emulation ops.
+	(device_reference): Renamed to mach_device_reference.
+	Interface changed.  All callers changed.
+	(device_allocate): Renamed to mach_device_deallocate.
+	Interface changed.  All callers changed.
+	
+	* kernel/device/ds_routines.c: Following changes #ifdef'ed for i386.
+	Include i386at/device_emul.h.
+	(mach_convert_device_to_port): New function.  Replaces
+	convert_device_to_port.  All callers changed.
+	(ds_device_open, ds_device_close, ds_device_write,
+	 ds_device_write_inband, ds_device_read, ds_device_read_inband,
+	 ds_device_set_status, ds_device_get_status, ds_device_set_filter,
+	 ds_device_map, ds_device_write_trap, ds_device_writev_trap):
+	Declaration made static.  Dropped "ds_" prefix.  Interface changed.
+	(ds_notify): Deleted.
+	(ds_nosenders): Declaration made static.
+	(io_done_thread_continue): (free_skbuffs): Use it.
+	(mach_device_emulation_ops): New variable.
+
+Mon Mar  4 10:39:03 MST 1996 Linus Kamb  (kamb@cs.utah.edu)
+
+	* Checked in FIPC code:
+
+	* Added kernel/ipc/fipc.[ch]
+		fipc_send(int a0, int a1, char *buf, int buf_len);
+			a0 and a1 together contain the 6 byte ethernet
+			address of the receiving machine, and the 16 bit
+			unsigned "fipc_port".
+	
+		fipc_recv(unsigned short fipc_port, char *buf, int *buf_len);
+			Returns as much as buf_len bytes to the user's buf from
+			port fipc_port.  Will block if there is no available
+			message on the fipc port.  Buf_len is an IN/OUT
+			parameter, giving the size of the user's buffer,
+			and returning the actual number of bytes in the
+			message.
+	
+	* Changed kernel/device/device_init.c
+		starts the fipc_thread, which does necessary initialization.
+
+	* Changed kernel/device/net_io.c
+		added net_fwrite() which is very similar to net_write(), but
+		is called by nefoutput() (if_ne.c) which is the path for
+		fipc_send calls.
+
+	* Changed kernel/kern/syscall_sw.c
+		adding -96 and -97 for FIPC traps
+
+	* Changed include/mach/syscall_sw.h
+		adding kernel_trap() delcarations for fipc_send and fipc_recv
+
+Tue Feb 13 22:34:27 1996  Kevin T. Van Maren  <vanmaren@fast.cs.utah.edu>
+
+	* More diskslice changes are integrated:
+
+	* kernel/scsi/disk_label.c: Updated this file I added last time.
+	  Full support for dos partitions and BSD disklabels.  No longer
+	  uses a disklabel structure for partition information encoding.
+,
+	* kernel/scsi/pc_scsi_label.c: No code changes
+
+	* kernel/scsi/rz.h: rzpartition() definition changed for slices
+
+	* kernel/scsi/rz_disk.c: Modified to use the array of partitions
+	  and the common partitioning code.  Disklabels are still there
+	  but are fairly meaningless to the kernel, and incorrect in any
+	  event.
+
+	* kernel/scsi/rz_disk_bbr.c: Uses new partitioning. NOT TESTED.
+
+	* kernel/scsi/rz_labels.h: Added diskpart structure.  Also added
+	  #defines for partition types in this structure.
+
+	* kernel/scsi/scsi_defs.h: MAX_SCSI_PARTS defined
+
+	* kernel/device/dev_name.c: Now converts a block device string to
+	  the correct slice+partition fields for the partition code.
+
+Thu Feb 8 00:27:33 MST 1996  Bryan Ford <baford@cs.utah.edu>
+
+	Merged in changes from UK02p20 to end of UK02-freeze branch,
+	and terminated the last remnant of the UK02-freeze branch.
+
+	Fri Feb  2 17:03:38 1996  steve clawson  <sclawson@marker.cs.utah.edu>
+
+		* kernel/ipc/ipc_notify.c: added ipc_notify_init_msg_accepted
+		  call to ipc_notify_init().
+
+	Wed Jan 17 17:04:24 1996  Bart Robinson  <lomew@fast.cs.utah.edu>
+
+		* Serial console working for real.
+
+		* kernel/device/cons.c, cons.h: added.  These are the same as in
+		  mach4-parisc/kernel/hpdev but changed slightly to make cninit
+		  re-entrant.  They can and should be used for the PA too.
+
+		* kernel/util/console.c, console_buf.c, console_list.h: removed.
+		  The console is handled differently now.
+
+	Wed Jan 17 13:51:46 1996  Kevin Van Maren  <vanmaren.cs.utah.edu>
+
+		* Unified the partition code for IDE & SCSI device drivers
+
+		* kernel/scsi/disklabel.c: new file
+		* kernel/scsi/rz_labels.c: deleted
+		* kerenl/scsi/pc_label.c: deleted
+
+		* kernel/scsi/rz_labels.h: Added more partition ID types. Also
+		  added the prefix scsi_ to structs.
+
+		* kernel/scsi/pc_scsi_label.c: removed grab_bob_label(),
+		  default_label is now scsi_default_label.
+
+		* kernel/scsi/rz_disk.c: Replaced scsi-specific partition code 
+		  with code that calls the unified partition code.
+
+Thu Jan 11 20:06:33 MST 1996  Bryan Ford <baford@cs.utah.edu>
+
+	Added remote debugging support to MOSS;
+	fixed a number of bugs.
+
+Mon Oct 30 09:21:10 MST 1995  Bryan Ford <baford@cs.utah.edu>
+
+	Merged in changes from UK02p15 to UK02p20:
+
+	Mon Oct 23 11:03:10 1995  steve clawson  <sclawson@marker.cs.utah.edu>
+
+		* bootstrap/bootstrap.c: Added back code to ask for a root
+		device (the '-a' switch from the command line).  Added
+		`translate_root' function that converts from Linux device
+		names to Mach ones.
+
+	Sun Oct 22 18:36:49 1995  Bryan Ford <baford@cs.utah.edu>
+
+		* Integrated Steve's and Bart's changes from the UK02p16-work
+		  branch.
+
+		* bootstrap: use exec_load() to find startup's symbol table,
+		  instead of trying to hand-interpret the a.out header.
+
+		* bootstrap: no longer try to load emulator symbols; that's
+		  Lites' job.
+
+		* bootstrap: if user types in a new server directory name,
+		  use the new device name as the root device as well.
+
+		* include/mach/sa/sys/reboot.h: added BSD flag definitions.
+
+		* mach4/kernel/ddb/db_aout.c: got rid of ddb_init();
+		  instead just call aout_db_sym_init() directly from model_dep.c.
+
+		* mach4/kernel/kern/bootstrap.c: Use MultiBoot kernel command
+		  line to find root device and flags, instead of old kludgy
+		  boothowto and bootdev values.
+
+	Fri Oct 13 16:47:52 1995  steve clawson  <sclawson@marker.cs.utah.edu>
+
+		* include/mach/multiboot.h: Added entries for symbol table
+		  information and for boothowto and bootdev into the boot_info 
+		  structure.
+
+		* include/mach/exec/exec.h: Cleaned up text (>80 columns).
+		* include/mach/exec/a.out.h: Added some macros from FreeBSD.
+
+		* kernel/ddb/db_aout.c: Enabled code to load kernel symbol
+		  table.
+
+	Thu Sep 28 16:57:07 1995  steve clawson  <sclawson@marker.cs.utah.edu>
+
+		* kernel/scsi/adapters/scsi_aha15.h: Added #defines for the
+		  1542CF. 
+		
+		* kernel/scsi/adapters/scsi_aha15_hdw.c: Added support for the
+		  1542CF.  #defined db_printf to just be printf.
+		
+		* kernel/scsi/adapters/scsi_aha17_hdw.c: #defined db_printf to
+		  just be printf.
+
+	Mon Jun 26 13:51:42 MDT 1995  Wolfram Stering <wolfi@cosy.sbg.ac.at>
+
+		* kernel/scsi/*label*: fixed to support Linux-style
+		  partitioning.
+
+	Fri May 19 11:17:13 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+		* Released UK02p17, as a private snapshot for goel.
+
+	Tue May 16 01:45:22 1995  Shantanu Goel  <goel@monk.mcl.cs.columbia.edu>
+
+		* kernel/device/ds_routines.c (ds_device_set_status):
+		  Pass device structure to Linux driver.
+		  (ds_device_get_status): Likewise.
+
+	Fri May  12 10:47:41 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+		* Released UK02p16, as an internal snapshot for rdukes
+
+Wed Oct  4 20:04:27 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+	Released moss-0.80 (tag moss-0-80)
+
+Wed Oct  4 12:05:57 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+	Merged in changes made for DOS extender at home:
+	* better mach/sa include files
+	* new list-based flexible memory allocator
+
+Wed May  3 13:59:54 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+	Merged in diffs from UK02p12 to UK02p15:
+
+	Wed May  3 10:47:41 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+		* Released UK02p15.
+		  (UK02p14 was just an intermediate tag after adding ELF support.)
+
+		Configuration-related changes:
+
+		* configrules: now looks for mach4 sources in a default location
+		  "next to" the machine-dependent sources if no '--with-mach4='
+		  option is specified.
+
+		ELF support changes:
+
+		* Got rid of old ex_get_header() routine from libmach_sa.a;
+		  instead provide a new library, libmach_exec.a (in libmach/exec)
+		  which provides a less a.out-specific exec_load() function.
+
+		* bootstrap/load.c, kernel/kern/bootstrap.c: use new exec_load() function.
+
+		* Added include/mach/exec/elf.h, from OSF's server bootstrap code
+
+		Makefile-related changes:
+
+		* Starting to phase out GSECTIONS/MSECTIONS, because
+		  that design forced all machine-dependent directories
+		  to come before all machine-independent directories,
+		  which isn't the right behavior in all cases.
+		  Now makefiles should just build SRCDIRS directly.
+
+		* We now generate public header files and libraries in
+		  $(OBJDIR)/include and $(OBJDIR)/lib before installing them.
+		  Added mach4/Makerules.lib, for various library targets to use.
+
+		* mach4/Makerules: sort all object files at once, so that
+		  .c files can override .S files and such.
+
+		* Split out common part of mach4-i386/Makefile.in and
+		  mach4-parisc/Makefile.in, and put them in mach4/Makerules.top.
+
+		Miscellaneous changes:
+
+		* (fjl) Various additions and fixes to the HTML pages.
+
+		* kernel/scsi: merged in MK83a changes, including new aha17 (eaha) driver.
+
+		* gensym.awk: 'size' command can now take an optional fourth parameter
+		  indicating the name of the symbol to declare.
+
+		* Moved errorlib.h to the public include/mach directory.
+
+		* include/mach/machine/vm_param.h: 
+
+		* include/mach/sa: Added some common POSIX errno's and other useful stuff.
+
+		* libmach/standalone: Moved generic C-library stuff to libmach/c.
+
+		* libmach/c/stdio: created, containing extremely simple high-level file I/O
+		  functions that do no buffering, instead going straight to the low-level
+		  Unix-like file I/O routines.
+
+	Fri Apr  7 17:43:22 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+		* Released UK02p13.
+
+Fri Apr  7 13:08:16 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+	Merged in diffs from UK02p9 to UK02p12:
+
+	Mon Apr  3 19:55:41 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+		* Released UK02p11.
+		  Too many changes to describe concisely,
+		  almost all affecting only the boot mechanism for now.
+		  Also, integrated the kernel/util, kernel/pc, kernel/dos code
+		  from my DOS extender project at home.
+
+	Mon Feb 27 16:32:59 MST 1995  Bryan Ford <baford@cs.utah.edu>
+
+		* Released UK02p10 as a non-functional snapshot
+
+Fri Feb 10 13:25:54 MST 1995  Bryan Ford <baford@cs.utah.edu>
+
+	Merged in diffs from UK02p7 to UK02p9:
+
+	Thu Jan 26 19:37:04 1995  steve clawson  <sclawson@fast.cs.utah.edu>
+
+		* kernel/scsi/adapters/scsi_aha15_hdw.c:
+
+		  Merged in MK83-MK83a changes.
+
+		  Added code to recognize 1542CF controllers. 
+		  (changes marked with a + imported from netbsd).
+		
+		  aha_probe(): 
+		    added 1542CF case in the id switch.
+		    +added code to unlock the mailbox interface on the C/CF's. 
+		    +added code to set DMA on/off times
+		    moved initialization around a bit:
+		      commented out the code to call aha_init_1().
+		      changed the call to aha_init_2() into aha_init().
+		  
+		* kernel/scsi/adapters/scsi_aha15.h:
+
+		  Added AHA_BID_1542CF, AHA_EXT_BIOS and AHA_MBX_ENABLE defines.
+		  Added struct aha_extbios.	    
+
+		* bootstrap/fs.h:
+		  Added fs_state field to struct fs.  (fix suggested by Remy Card)
+
+
+	Tue Jan 17 15:55:01 MST 1995  Bryan Ford <baford@cs.utah.edu>
+
+		* Released UK02p8
+
+	03-Dec-94 Johannes Helander (jvh) at Helsinki University of Technology
+
+		* bootstrap/ffs_file_io.c: 
+
+		  Added support for 4.4 BSD fastlinks.  The change breaks 4.3
+		  slowlinks of length four or less.
+
+		  Interpret 4.4 BSD directory entries correctly also on little
+		  endian machines.
+
+	12 Jan 1995 17:52:44 -0500  Shantanu Goel <goel@cs.columbia.edu>
+
+		* vm/vm_map.c: Incorporated the device_write bug fix from MK83a.
+
+	09-Dec-94  Ian Dall (dall@hfrd.dsto.gov.au)
+
+		* Fixed char_write_done to use ds_device_write_reply_inband when
+		  appropriate.
+
+	16-May-94  Ian Dall (idall@eleceng.adelaide.edu.au) at University of Adelaide
+
+		* Increase tty_outq_size to 2048. *Must* be greater than largest
+		  tthiwat entry or bad things happen.
+
+	Wed Dec  7 11:43:02 MST 1994  Roland McGrath (roland@gnu.ai.mit.edu)
+
+		* Fix to bootstrap code to interpret BSD 4.4 FFS filesystems.
+
+Fri Nov 25 13:56:32 MST 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	Merged in diffs from UK02p6 to UK02p7:
+
+	* GNU make should now no longer mistakenly delete any more
+	  intermediate files the first time around.
+
+	* 'make configure' should now work without producing bogus
+	  error messages.  (Hint: don't put any bogus 'AC_*' text
+	  strings in input files to autoconf, even if they're
+	  in comments!)
+
+	* Don't install 'Makefile.in' into the public include directory.
+
+	* mig/Makerules (parser.o): 
+	  Added explicit dependencies to protect files that were
+	  automatically deleted by GNU make after the first compilation on
+	  an empty object tree.  These were deleted because GNU make
+	  decided that they were intermediary files.  However, because
+	  they are listed in the automatically generated dependency file,
+	  GNU make realizes that it must regenerate them on a subsequent
+	  "make" pass.  Since they have explicit dependencies (in the
+	  "depend" file) on that subsequent pass, GNU make does not delete
+	  them.
+
+Tue Nov  1 19:12:55 1994  Jeff Law  (law@snake.cs.utah.edu)
+
+	* kernel/kern/{processor.h, task.h, thread.h}: Enclose full
+	prototypes inside #if KERNEL (for "klg" files where foo_t
+	is typically mapped to mach_port_t, which causes decl and defn
+	not to match).
+
+	* Merge in machine-independent kernel changes from MK83-MK83a.
+	Detailed change entries in CHANGES.MK83a.log.  Effected files:
+
+	* include/device/bpf.h: MK83a Changes.
+	* include/mach/{exe, mach4, mach_types}.defs: Likewise.
+	* include/mach/{host_info, pc_sample, processor_info}.h: Likewise.
+	* include/mach/vm_statistics.h: Likewise.
+	* kernel/chips/{audio.h, busses.h}: Likewise.
+	* kernel/device/{chario.c, conf.h, net_io.c}: Likewise.
+	* kernel/kern/{exception.c, host.c, mach_clock.c}: Likewise.
+	* kernel/kern/{host.c mach_clock.c pc_sample.c}: Likewise.
+	* kernel/kern/{processor.h, strings.c, task.c, task.h}: Likewise.
+	* kernel/kern/{thread.c, thread.h}: Likewise.
+	* kernel/scsi/rz_labels.c: Likewise.
+	* kernel/scsi/adapters/scsi_aha15_hdw.c: Likewise.
+	* kernel/vm/{vm_fault, vm_map, vm_resident}: Likewise.
+
+	* kernel/bogus/eaha.h: New file for MK83a support.
+	* kernel/kern/pc_sample.h: Likewise.
+	* kernel/scsi/adapters/scsi_aha17_hdw.c: Likewise.
+
+Sat Oct 22 14:56:33 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* Got rid of various rinky-dink C library routines
+	  that were duplicated in both the kernel and libmach.
+	  In the system-independent source tree, this just
+	  means kern/sscanf.c so far, but I've got my eye
+	  on printf.c as well.  In the i386-specific tree
+	  it includes all kinds of little things such as bcopy.
+
+Wed Oct 19 12:58:13 1994  Jeff Law  (law@snake.cs.utah.edu)
+
+	* kernel/kern/mach.srv: Use immediate forms of act_get_state and
+	act_set_state for thread_{get,set}_state.
+
+Thu Oct 13 09:50:24 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* include/mach/sys_*.h: moved to include/mach/sa/sys/*.h.
+	  Also added some other C-library-like files in there
+	  for the benefit of standalone programs as well as my
+	  Mach-on-DOS ("MOSS") C library.
+
+	* Makerules: For all programs compiled on the target machine
+	  (actually host machine in proper terminology),
+	  add include/mach/sa to the include path.
+
+	* Makefiles: minor cleanups, added some .PRECIOUS rules
+	  to reduce the number of files gratuitously recompiled
+	  the second time around.
+
+	* libmach/unixoid: Cleaned out.  We no longer need the
+	  unixoid version of libmach at all, because neither
+	  the Hurd nor Lites need it (or ever will).  Good riddance.
+	  We might start generating a 'libmach.a' again soon,
+	  but it will contain only the "pure" Mach parts -
+	  nothing related to Unix or C libraries.
+
+	* libmach/standalone/printf.c: Broke into multiple files
+	  and added various tidbits of functionality.
+
+Fri Sep 30 01:43:16 1994  Jeff Law  (law@snake.cs.utah.edu)
+
+	* kernel/bogus/bogus.c: New file.
+
+Mon Sep 26 12:58:57 1994  Jeff Law  (law@snake.cs.utah.edu)
+
+	* kernel/kern/processor.c (pset_init): Nuke debugging printf.
+
+	* kernel/kern/thread.c (thread_create_in): Grab a reference to the
+	processor set for the new thread.
+
+Fri Sep  9 00:00:53 1994  Jeff Law  (law@snake.cs.utah.edu)
+
+	* kernel/device/ds_routines.c (io_done_thread): Nuke call to
+	stack_privilege.
+
+Thu Sep  8 11:37:03 1994  Jeff Law  (law@snake.cs.utah.edu)
+
+	* kernel/kern/act.c (act_set_state, act_get_state): Use natural_t
+	to match prototype.
+
+	* kernel/kern/zalloc.c: lock_zone has been renames to zone_lock,
+	likewise for unlock_zone.
+	
+	* kernel/bogus/mach_pcsample.h: Disable for now.
+	* kernel/bogus/xpr_debug.h: Likewise.
+
+	* include/mach/rpc.h: Add c-signature stuff.
+
+	* kernel/device/chario.c (ttstart): New function.
+	(ttrstrt): Use it.
+
+	* include/mach/mach4.defs: Wrap PC sampling stuff inside
+	an appropriate #ifdef.
+
+Wed Aug 31 10:59:51 1994  Jeff Law  (law@fast.cs.utah.edu)
+
+	* kernel/ipc/ipc_notify.c: Use MACH_MSG_TYPE_INTEGER_32 rather
+	than MACH_MSG_TYPE_INTEGER_T.
+
+	* kernel/kern/ipc_sched.c: Don't include thread_swap.h
+
+	* kernel/kern/sched_prim.c (thread_wakeup_prim): "event" should
+	be an event_t.  Cast argument to wait_hash to an int.
+	(various): Chagne thread->runq to thread->shuttle.runq.
+
+	* kernel/device/net_io.c: Don't typedef u_long here.
+
+	* kernel/kern/ipc_kobject.c: Include mach_machine_routines.h
+
+	* kernel/device/ds_routines: Include current.h for current_thread.
+
+	* include/mach/sys_types.h: Put u_long back.
+
+Tue Aug 30 13:45:05 MDT 1994
+
+	* Makefiles: Don't use CFLAGS etc. to build variables in;
+	that way the user can specify them on the `make' line
+	and still get sensible results.
+	Also, named some variables HOST_xxx and TARGET_xxx
+	to better support cross-compilation.
+
+Fri Aug 26 12:06:35 1994  Jeff Law  (law@fast.cs.utah.edu)
+
+	* include/mach/mach_port.defs: Use thread_t, not act_t.
+
+Mon Aug 1 18:15:00 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* Got most of the migrating threads changes merged in
+
+Tue Oct 25 12:32:28 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* Released UK02p6.
+
+	* Moved exec header interpretation stuff from the bootstrap code
+	  into libmach so the kernel could also use it when initializing
+	  the bootstrap program itself.
+
+Sat Oct 22 15:44:42 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* Moved cthreads.h from the top-level public include directory
+	  into the mach/ include subtree.  Higher-level OS personalities
+	  can create their own cthreads.h, or just make a stub
+	  that cross-includes mach/cthreads.h if they want to use
+	  the "standard" implementation.
+
+Mon Oct 17 10:54:38 ??? 1994  Csizmazia Balazs  (csb@ullman.elte.hu)
+
+	* Added MINIX filesystem support to the bootstrap loader.
+
+Sat Oct 15 17:22:01 MDT 1994  Bryan Ford (baford@cs.utah.edu)
+
+	* Temporary kludge: added servers/ include directory
+	  containing libmachid and libnetname headers;
+	  added corresponding library code to libmach.
+	  This is so we can compile Lites against Mach4
+	  without having to create a full new USER package yet.
+
+	* Changed ifdef's of KERNEL to MACH_KERNEL
+	  in the public header files.
+	  (Really should get rid of them entirely.)
+
+Fri Sep 16 11:33:44 MDT 1994  Bryan Ford (baford@cs.utah.edu)
+
+	* Released UK02p5.
+
+	* Added copyrights to the makefiles.
+
+Fri Sep  9 10:44:49 MDT 1994 Bryan Ford (baford@cs.utah.edu)
+
+	* configure.in: if user specifies --enable-debug,
+	  add -DDEBUG to the compiler flags.
+
+Tue Sep  6 09:58:49 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* Added blank .SUFFIXES line
+	  to eliminate the requirement of using `make -r'.
+	  (Things still go faster with `-r' though.)
+
+Mon Sep  5 22:44:00 1994  Patrick Doyle  (wpd@peanutbutter)
+
+	* README (DIRECTORY STRUCTURE): Added a distillation of a
+	  discussion with Bryan regarding organization of and differences
+	  between the two libraries produced by the distribution.  (Also
+	  cleaned up references to libmach_ux.a when I stumbled across
+	  them in the source).
+
+Mon Sep  5 12:16:30 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* Full cross compilation support
+
+	* Cleaned up all install rules
+	  so they will no longer gratuitously reinstall things.
+
+Sun Sep  4 11:33:03 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* As suggested by Roland McGrath,
+	  changed the genassym mechanism to cross-compile better,
+	  by compiling to assembly language source
+	  instead of an executable program.
+
+	  Also refined and extended this technique
+	  to make it more convenient,
+	  and to allow MIG to use it too.
+
+Sun Sep  4 08:10:05 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* Makefiles: better cross-compilation support.
+
+Sat Sep  3 15:14:36 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* bootstrap/*: got FFS support back in;
+	  now both ext2 and FFS are supported at the same time
+	  (although in a horrendously kludgy way).
+
+Wed Jul 20 14:00:45 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* include/mach/mig_support.h: Got rid of cross-includes
+	  of some old bogus header files.
+
+	* Released UK02
+
+
+Mon Jul 18 18:28:00 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	Integrated microkernel changes needed by LITES,
+	from Johannes Helander (jvh) and Tero Kivinen (kivinen) @cs.hut.fi:
+
+	* (jvh) include/device/device_reply.defs: added SEQNOS support.
+
+	* (jvh) include/mach/error.h: Surrounded typedefs with ifndef ASSEMBLER.
+
+	* (jvh) mig, libmach: mig_dealloc_reply_port() now takes an argument,
+	  which is ignored in the default libmach implementation of this function,
+	  but may be needed for custom reply port allocators.
+	  MIG stubs now pass the reply port to be deallocated.
+
+	* (jvh) mig, libmach: new function mig_put_reply_port(),
+	  which does nothing in the default libmach implementation.
+	  MIG stubs call this function when done with a reply port,
+	  if it wasn't deallocated with mig_dealloc_reply_port().
+
+	* (jvh) mig/mig.sh: added -migcom flag to specify the location of migcom.
+
+	* (jvh) libmach/err_kern.sub: added new errno strings for 4.4BSD and Lite.
+
+	* (???) libthreads: added wait_type to cproc structure
+	  keeping track of what type of event is being waited for.
+
+	* (???) libthreads: added a holder field to mutex structure
+	  keeping track of who's holding a mutex, for debugging.
+
+	* (kivinen) libthreads: Renamed cthread_t->catch to cthread_t->catch_exit,
+	  because catch is a reserved word in C++.
+
+	* (jvh) libthreads: Added CONDITION_NAMED_INITIALIZER and MUTEX_NAMED_INITIALIZER
+	  macros.  They take one argument: a name string.
+
+
+Fri Jul 15 11:46:19 MDT 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* kern/bootstrap.c: gutted and rewrote
+	  to get the boot image from the bmod mechanism.
+	  Needs to be gutted still more.
+

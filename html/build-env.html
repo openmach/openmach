@@ -1,0 +1,275 @@
+<html>
+<head><title>Build Environment</title></head>
+<body>
+<h1>Build Environment</h1>
+<hr>
+
+
+<h2>Basic Goals</h2>
+
+<ul>
+<li>	Should use only well-known, commonly-available, portable programs.
+<li>	Should be easy to configure, build, and install.
+<li>	Rebuilds should be fast---keep red tape to a minimum.
+<li>	Should work with standard tools such as RCS and CVS
+<li>	Keep it simple:
+	if the program gets too complex for a simple build environment,
+	something's probably wrong with the program itself.
+</ul>
+
+
+<h2>Design Philosophy</h2>
+
+In the original Mach source code environment, the general orientation of the
+entire system was toward the machine-independent code being "master" and the
+machine-dependent code being the "slave".  The "main" machine-independent parts
+would generally include or invoke the machine-dependent parts to implement
+machine-dependent aspects of the system.
+<p>
+
+However, this basic structure assumes
+that the machine-independent code can always "know"
+what exactly is really machine-dependent and what isn't,
+which is generally not possible without some horrible kludging.
+Different subsets of the available machine-independent functionality
+often apply to different variants of the microkernel, and this is difficult to
+express if the machine-independent code is trying to make all the decisions.
+<p>
+
+Therefore, in the new build environment, the roles of the components are
+reversed: the more-specific component is always the "master", and it determines
+which pieces of less-specific functionality to incorporate, and in what way.
+The machine-independent code takes the role of "slave", merely a source code
+repository to pick and choose from, much like a library.  This way, specific
+variants of the system can have complete control over the finished product.
+<p>
+
+Good microkernels tend to contain a fairly high percentage of machine-dependent
+code, because most of the generic, high-level, machine-independent functionality
+has been moved out to user-level servers.  This percentage is already pretty
+high in Mach, and is probably going to go up even more as the kernel becomes
+more "micro".  For this reason, instead of including the source code for every
+different supported architecture in one big source tree, I've split up the
+Mach sources into smaller "packages".  There is one generic, machine-independent
+package ("mach4"), and at least one machine-specific package for each supported
+architecture ("mach4-i386", "mach4-parisc", etc.).
+<p>
+
+In keeping with the idea of more-specific code being "master", the actual
+configure scripts and bottom-level makefiles come from the architecture-specific
+source tree; they can use scripts and makefiles from the machine-independent
+source tree as appropriate.  A third, even-more-specific source package "layer"
+could even be used, say for a specific vendor or machine type.  For example,
+if support for the Sequent Symmetry gets added back in, it could be a
+third-level package based on both the mach4 and the mach4-i386 packages.
+<p>
+
+
+<h2>Installed Files</h2>
+
+All files installed by the build environment
+are placed in directories based on the specified prefix
+(/usr/local by default if you don't specify a prefix).
+Here is a list of the files that get installed,
+and where they go relative to the prefix:
+
+<xmpl>
+/bin/mig		Mach Interface Generator (shell script front-end)
+/include/*		Public Mach header files.
+/lib/mach-boot/*	Boot modules and other booting-related files.
+/lib/migcom		Executable invoked by the `mig' script.
+</xmpl>
+
+
+<h2>Source Directory Structure</h2>
+
+<pre>
+mach4			Machine-independent source package
+	bootstrap	User-level bootstrap code and default pager.
+			I'm hoping to make this obsolete soon -
+			just load the startup server(s) along with the kernel.
+	include		Global include files to be copied into $(prefix)/include.
+	kernel		Source files for the microkernel itself.
+		bogus	Stub header files that `config' used to produce,
+			which define various configuration symbols.
+			This directory will be eliminated
+			as soon as I implement a better way to handle
+			this kind of configuration.
+		chips	Repository for a bunch of semi-drivers; currently unused.
+		ddb	Kernel debugger code.
+		device	System-independent device code.
+		kern	Miscellaneous kernel code.
+		scsi	Host-adapter-independent SCSI device code.
+		vm	Virtual memory management.
+	libmach		Produces libmach.a, libmach_sa.a, and the default
+			.h files for the public .defs files.
+		standalone
+		unixoid
+			See discussion of libraries below.
+	libthreads	C threads library.
+	mig		Mach Interface Generator program, for compiling .defs
+			files.  Incorporates the bugfixes in the GNU Hurd
+			distribution of MiG.
+
+mach4-i386		i386-specific source package
+	boot		Necessary code and tools for smashing boot images together.
+	bootstrap	i386 part of the traditional bootstrap code.
+	include		i386 public includes to be copied to $(prefix)/include.
+	kernel		i386 source files for the basic microkernel.
+		aux	Contains genassym.c, which produces assym.s,
+			a file describing structure offsets for assembly code.
+		bogus	Same idea as system-independent bogus directory.
+		chips	Contains a copy of mach4/kernel/chips/busses.c, big hack.
+		i386	Code specific to the i386 processor architecture.
+		i386at	Code specific to PCs (ISA bus, PC peripherals, etc.).
+		intel	PMAP code, common to both i386 and i860 processors.
+	libmach		i386 specific Mach library code.
+	libthreads	i386 code for C threads.
+	mig		Contains only a Makefile.in at the moment,
+			since mig currently has no machine-specific files,
+			but this may have to change to support cross-compilation.
+</pre>
+
+Currently, this distribution produces two libraries, libmach.a and
+libmach_sa.a, following CMU's model.  The libmach_sa.a library may be
+used to link a Mach program without any other stuff that normally
+comes with the higher-level OS.  It makes a completely "standalone",
+personality-neutral Mach program and is used for programs like the
+bootstrap server (and Remy Card's test server).  The libmach.a library
+is used to link programs in a Unix-like envronment -- specifically,
+the CMU UX server environment.  It is an unfortunate accident that it
+has a "general purpose" name like "libmach.a", rather than a more
+specific sounding name like "libmach_ux.a".  (As an aside, I tried
+naming it libmach_ux.a in one of my releases, but I put it back to
+libmach.a because it led to too much of a mess).
+<p>
+
+In CMU's build environment, all of the source files for both versions
+of the library were packed into one big happy directory with an
+enormous makefile to determine what went where.  In the Mach4
+environment, all of the common source files are in libmach; the ones
+specific to libmach_sa.a are in libmach/standalone; and the ones
+specific to libmach.a are in libmach/unixoid, (with i386-specific
+files in mach4-i386/libmach/... and generic files in mach4/libmach/...
+as discussed above).  The makefiles that are installed in the object
+directory are used to produce the two libraries and to install the
+presentation header files that define the intefaces to the various
+services provided by the kernel.  When libmach/Makefile is "made", it
+generates all of the header, client, and server source files for the
+common modules of the library.  When it is "make install"ed, it
+installs the header files in their proper installation directories.
+The makefiles in libmach/unixoid and libmach/standalone may be used to
+compile and install libmach.a and libmach_sa.a respectively. 
+<p>
+
+
+<h2>Gory Details</h2>
+
+The configure script is generated from configure.in by autoconf.  It requires
+two new autoconf macros, AC_DIR and AC_SRCDIR, which I've just submitted to
+bug-gnu-utils as a patch to autoconf-1.11.  Hopefully the addition will be
+incorporated by the next release of autoconf.  In the meantime, you can either
+use the configure script I generated, or ask me and I'll send you the patches.
+<p>
+
+There are two types of makefiles in the source directories: "Makerules" files
+and "Makefile.in" files.  The former are used primarily in generic, machine-
+independent directories, and are meant to be included by other makefiles.
+The latter are templates for "real" makefiles, which will be translated and
+copied into corresponding object directories by the configure script.
+<p>
+
+There is also a single "Makeconf.in" file,
+which the configure script translates into a "Makeconf" file
+in the top-level object directory.
+Each Makefile.in file contains near its beginning
+a clearly-marked "configuration section",
+which is exactly the same for all Makefile.in files in that source tree.
+The reason it has to be included in all of the Makefile.in files
+even though it is exactly the same in every case
+is that the configure script will make different substitutions in it
+depending on which subdirectory the Makefile resides in.
+One of the things the configuration section in each Makefile does
+is include the global Makeconf file,
+which defines various configuration-related variables
+that don't depend on which directory the Makefile is in.
+<p>
+
+The configure script generates one Makefile in the top-level object directory,
+a Makefile in the object subdirectories for each major system component,
+and the global Makeconf file in the top-level object directory.
+The top-level Makefile simply runs make recursively on each of the
+subdirectories in the correct order; it does not actually create anything.
+All the other makefiles are independent of each other (there are no other
+recursive make invocations), and do all the real work.
+<p>
+
+The makefiles are very unlikely to work with anything but GNU make.
+Also, you will probably want to use `make -r' instead of just `make', to
+disable all the built-in implicit rules: it makes builds significantly faster.
+I have `make' permanently aliased to `make -r', and I just use `\make' when
+I'm building something that breaks when the built-in rules are missing.
+<p>
+
+To compile everything, just type `make' in the top-level object directory
+that you executed the configure script from.  To build only a certain part,
+such as the kernel, go into the appropriate object subdirectory (e.g. `kernel')
+and run make from there.  You shouldn't have to set up any special shell
+variables or anything.  You can say `make <objfile>' for some arbitrary object
+file from within an object directory and get the expected results; `make -n'
+works properly; and so on - in other words, no funny stuff.
+<p>
+
+<b>Include file dependencies:</b>
+Include file dependencies are kept track of automatically, much like in the
+original Mach build environment, except that the work is now done by a five-line
+makefile rule (in mach4/Makerules) instead of a 1300-line C program.  Unlike
+in the ODE build environment, the dependency file shouldn't get trashed if you
+happen to ^C a build session at the wrong time.  It should not be significantly
+slower this way either; maybe even faster.
+<p>
+
+Note that one problem with this automatic dependency tracking is that if you
+rename or delete a header file, but the `depend' file in your object directory
+still refers to it, make will die with an error message saying that it can't
+find that header file and doesn't know how to build it.  The solution is to
+edit the `depend' file and simply remove all references to the old header file.
+(A more brute-force approach that also works is just to `make clean' and start
+again from scratch.)
+<p>
+
+<b>Finding Source Files:</b>
+Each object directory is generally responsible for building a single target,
+such as the kernel or the bootstrap code or the cthreads library.
+The Makefile(.in) for each of these object directories
+specifies a list of "sections",
+or source directory names relative to the top of one of the source trees,
+from which source files will be taken.
+All files with `.c' extensions in each of these source directories
+will be compiled and linked into the resulting target.
+Also, each of these source directories
+is automatically added to the include path with the `-I' preprocessor directive.
+<p>
+
+<b>Overriding Source and Include Files:</b>
+Since all source files for a particular target
+are compiled into a single object directory,
+if there is more than one source file of the same name in different source directories,
+only one will actually be compiled.
+The SECTIONS variables are ordered such that
+more-specific source directories (e.g. mach4-i386/...)
+will be searched before less-specific source directories (e.g. mach4/),
+and therefore more-specific source files override less-specific ones.
+Include files included without specifying a directory name
+(e.g. `#include "thread.h"')
+can be overridden by more-specific modules in the same way.
+<p>
+
+Ideas and suggestions on how to make the build environment better are welcome.
+(For one thing, does anyone know of a way for a Makefile to disable the
+default rules?)
+<p>
+
+<hr>
+</body>
+</html>

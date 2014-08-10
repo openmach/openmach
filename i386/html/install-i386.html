@@ -1,0 +1,143 @@
+<html>
+<head><title>Installation on i386 PCs</title></head>
+<body>
+<h1>Installation on i386 PCs</h1>
+<hr>
+
+<h2><a name="options">i386-specific Options</a></h2>
+
+<b>--enable-elf</b>:
+Specify this option if your build tools are set up for ELF format
+instead of a.out.
+<br>
+<b>--enable-libmach</b>:
+Specify this option to build libmach.a
+<br>
+<b>--enable-linuxdev</b>:
+Specify this option to include linux network drivers.
+<p>
+
+<h2>Assembler problems?</h2>
+
+Currently this is the biggest thing tripping people up when trying to
+compile mach for themselves.  If you're getting compilation problems
+that look like this then you have a fundamental problem in that you
+don't have a new enough version of gas.
+
+<pre>
+Error: Unknown pseudo-op:  `.p2align'
+Error: Unknown pseudo-op:  `.code16'
+</pre>
+
+The patches to gas have been in the Cygnus tree for quite a while, but
+since there hasn't been a major release of binutils for a while, there
+isn't a released version of gas that supports these pseudo-ops.  Please check 
+<a href="ftp://flux.cs.utah.edu/flux/gas-950428.tar.gz">
+  ftp://flux.cs.utah.edu/flux/gas-950428.tar.gz</a> for a stable version 
+of the development sources.
+<p>
+
+
+<hr> <h3>The following information is very old and is now only mostly
+true.</h3> <hr>
+
+<h2>Assembler problems?</h2>
+
+If compilation of Mach fails because of the GNU assembler
+complaining about nonexistent `0f' labels or something like that,
+you'll need a bug-fixed version of GAS.
+The easiest way to solve the problem is probably
+to download gas-2.3 from prep.ai.mit.edu or one of its mirrors,
+and apply the following patch:
+
+<pre>
+*** gas/read.c.dist	Mon Jul 11 22:21:46 1994
+--- gas/read.c	Mon Jul 11 22:22:16 1994
+***************
+*** 110,118 ****
+  char is_end_of_line[256] =
+  {
+  #ifdef CR_EOL
+!   _, _, _, _, _, _, _, _, _, _, 99, _, _, 99, _, _,	/* @abcdefghijklmno */
+  #else
+!   _, _, _, _, _, _, _, _, _, _, 99, _, _, _, _, _,	/* @abcdefghijklmno */
+  #endif
+    _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,	/* */
+  #ifdef TC_HPPA
+--- 110,118 ----
+  char is_end_of_line[256] =
+  {
+  #ifdef CR_EOL
+!   99, _, _, _, _, _, _, _, _, _, 99, _, _, 99, _, _,	/* @abcdefghijklmno */
+  #else
+!   99, _, _, _, _, _, _, _, _, _, 99, _, _, _, _, _,	/* @abcdefghijklmno */
+  #endif
+    _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _,	/* */
+  #ifdef TC_HPPA
+</pre>
+
+Note that gas-2.5.1 reportedly does <b>not</b> successfully compile Mach,
+although newer versions than that might work.
+<p>
+
+<h2>Booting Mach from NetBSD, FreeBSD, or Mach boot loaders</h2>
+
+These boot loaders are all pretty similar:
+they can load boot images only from a BSD Fast File System partition,
+and they start running the boot images
+in 32-bit mode at 0x100000 (1 megabyte).
+The main difference is in what kinds of boot image file formats they understand.
+The Mach boot blocks understand only "traditional" ZMAGIC-format boot images
+with little-endian headers.
+The NetBSD boot loader understands that format,
+plus the newer NetBSD ZMAGIC format with big-endian headers.
+I don't know what all the FreeBSD boot loader supports,
+or if it can successfully load Mach boot images;
+any information would be greatly appreciated.
+<p>
+
+When you compile and install Mach,
+a 32-bit boot image called `<prefix>/lib/mach-boot/Mach' is created.
+The type of boot image depends on what build tools you're using;
+the boot image produced is basically just a standard 32-bit a.out executable
+in whatever flavor is the default for the version of `ld' you use.
+If you're compiling on Mach
+or using cross-development tools configured for `i386-mach' or `i386-gnu',
+then you'll get traditional little-endian ZMAGIC boot images,
+which should be loadable from all of the BSD/Mach boot loaders.
+If you're compiling on NetBSD with its native tools,
+you'll get a boot image with big-endian ZMAGIC headers,
+which will probably only work with NetBSD boot blocks.
+Again, I don't know about FreeBSD.
+<p>
+
+<h2>Booting Mach from Linux boot loaders</h2>
+
+In order to get the Mach build environment to create boot images
+that can be loaded from Linux boot loaders such as LILO,
+currently you really have to compile on a Linux machine:
+compilation from other environments doesn't work.
+This is because Linux boot images contain a bunch of 16-bit code
+that can only be assembled with as86 and ld86,
+which are special tools that, as far as I know,
+exist only on Linux.
+<p>
+
+Assuming you're compiling on a Linux system,
+after running `make install'
+you should get a Linux boot image called `<prefix>/lib/mach-boot/zMach'.
+To load a Mach boot image from LILO,
+just set up your lilo.conf file
+to load this Mach boot image just like an ordinary Linux boot image.
+For example, you could add an entry that looks something like this:
+
+<pre>
+image = <prefix>/lib/mach-boot/zMach
+	label = mach
+</pre>
+
+You can then run `lilo' to update the boot map, reboot, and try running Mach.
+
+<hr>
+</body>
+</html>

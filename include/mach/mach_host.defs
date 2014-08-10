@@ -1,0 +1,379 @@
+/*
+ * Mach Operating System
+ * Copyright (c) 1991,1990,1989 Carnegie Mellon University.
+ * Copyright (c) 1993,1994 The University of Utah and
+ * the Computer Systems Laboratory (CSL).
+ * All rights reserved.
+ *
+ * Permission to use, copy, modify and distribute this software and its
+ * documentation is hereby granted, provided that both the copyright
+ * notice and this permission notice appear in all copies of the
+ * software, derivative works or modified versions, and any portions
+ * thereof, and that both notices appear in supporting documentation.
+ *
+ * CARNEGIE MELLON, THE UNIVERSITY OF UTAH AND CSL ALLOW FREE USE OF
+ * THIS SOFTWARE IN ITS "AS IS" CONDITION, AND DISCLAIM ANY LIABILITY
+ * OF ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF
+ * THIS SOFTWARE.
+ *
+ * Carnegie Mellon requests users of this software to return to
+ *
+ *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
+ *  School of Computer Science
+ *  Carnegie Mellon University
+ *  Pittsburgh PA 15213-3890
+ *
+ * any improvements or extensions that they make and grant Carnegie Mellon
+ * the rights to redistribute these changes.
+ */
+/*
+ * File:	mach/mach_host.defs
+ *
+ * Abstract:
+ *	Mach host operations support.  Includes processor allocation and
+ *	control.  
+ */
+
+#ifdef	MACH_KERNEL
+simport <kern/compat_xxx_defs.h>;	/* for obsolete routines */
+#endif
+
+subsystem
+#if	KERNEL_SERVER
+	  KernelServer
+#endif
+		       mach_host 2600;
+
+/*
+ *	Basic types
+ */
+
+#include <mach/std_types.defs>
+#include <mach/mach_types.defs>
+
+/*
+ *	Get list of processors on this host.
+ */
+
+routine host_processors(
+		host_priv	: host_priv_t;
+	out	processor_list	: processor_array_t);
+
+/* obsolete */
+routine yyy_host_info(
+		host		: host_t;
+		flavor		: int;
+	out	host_info_out	: host_info_t, IsLong);
+
+
+/* obsolete */
+routine yyy_processor_info(
+		processor	: processor_t;
+		flavor		: int;
+	out	host		: host_t;
+	out	processor_info_out: processor_info_t, IsLong);
+
+/*
+ *	Start processor.
+ */
+
+routine	processor_start(
+		processor	: processor_t);
+
+/*
+ *	Exit processor -- may not be restartable.
+ */
+
+routine	processor_exit(
+		processor	: processor_t);
+
+/* obsolete */
+routine yyy_processor_control(
+		processor	: processor_t;
+		processor_cmd	: processor_info_t, IsLong);
+
+/*
+ *	Get default processor set for host.
+ */
+routine processor_set_default(
+		host		: host_t;
+	out	default_set	: processor_set_name_t);
+
+/*
+ *	Get rights to default processor set for host.
+ *	Replaced by host_processor_set_priv.
+ */
+routine xxx_processor_set_default_priv(
+		host		: host_priv_t;
+	out	default_set	: processor_set_t);
+
+/*
+ *	Create new processor set.  Returns real port for manipulations,
+ *	and name port for obtaining information.
+ */
+routine processor_set_create(
+		host		: host_t;
+	out	new_set		: processor_set_t;
+	out	new_name	: processor_set_name_t);
+
+/*
+ *	Destroy processor set.
+ */
+routine processor_set_destroy(
+		set		: processor_set_t);
+
+/* obsolete */
+routine yyy_processor_set_info(
+		set_name	: processor_set_name_t;
+		flavor		: int;
+	out	host		: host_t;
+	out	info_out	: processor_set_info_t, IsLong);
+
+/*
+ *	Assign processor to processor set.
+ */
+routine processor_assign(
+		processor	: processor_t;
+		new_set		: processor_set_t;
+		wait		: boolean_t);
+
+/*
+ *	Get current assignment for processor.
+ */
+
+routine processor_get_assignment(
+		processor	: processor_t;
+	out	assigned_set	: processor_set_name_t);
+
+/*
+ *	Assign thread to processor set.
+ */
+routine	thread_assign(
+		thread		: thread_t;
+		new_set		: processor_set_t);
+
+/*
+ *	Assign thread to default set.
+ */
+routine thread_assign_default(
+		thread		: thread_t);
+
+/*
+ *	Get current assignment for thread.
+ */
+routine thread_get_assignment(
+		thread		: thread_t;
+	out	assigned_set	: processor_set_name_t);
+
+/*
+ *	Assign task to processor set.
+ */
+routine task_assign(
+		task		: task_t;
+		new_set		: processor_set_t;
+		assign_threads	: boolean_t);
+/*
+ *	Assign task to default set.
+ */
+routine task_assign_default(
+		task		: task_t;
+		assign_threads	: boolean_t);
+
+/*
+ *	Get current assignment for task.
+ */
+routine task_get_assignment(
+		task		: task_t;
+	out	assigned_set	: processor_set_name_t);
+
+/*
+ *	Get string describing current kernel version.
+ */
+routine	host_kernel_version(
+		host		: host_t;
+	out	kernel_version	: kernel_version_t);
+
+/*
+ *	Set priority for thread.
+ */
+routine thread_priority(
+		thread		: thread_t;
+		priority	: int;
+		set_max		: boolean_t);
+
+/*
+ *	Set max priority for thread.
+ */
+routine thread_max_priority(
+		thread		: thread_t;
+		processor_set	: processor_set_t;
+		max_priority	: int);
+
+/*
+ *	Set task priority.
+ */
+routine task_priority(
+		task		: task_t;
+		priority	: int;
+		change_threads	: boolean_t);
+
+/*
+ *	Set max priority for processor_set.
+ */
+routine processor_set_max_priority(
+		processor_set	: processor_set_t;
+		max_priority	: int;
+		change_threads	: boolean_t);
+
+/*
+ *	Set policy for thread
+ */
+routine thread_policy(
+		thread		: thread_t;
+		policy		: int;
+		data		: int);
+
+/*
+ *	Enable policy for processor set
+ */
+routine processor_set_policy_enable(
+		processor_set	: processor_set_t;
+		policy		: int);
+
+/*
+ *	Disable policy for processor set
+ */
+routine processor_set_policy_disable(
+		processor_set	: processor_set_t;
+		policy		: int;
+		change_threads	: boolean_t);
+/*
+ *	List all tasks in processor set.
+ */
+routine processor_set_tasks(
+		processor_set	: processor_set_t;
+	out	task_list	: task_array_t);
+
+/*
+ *	List all threads in processor set.
+ */
+routine processor_set_threads(
+		processor_set	: processor_set_t;
+	out	thread_list	: thread_array_t);
+
+/*
+ *	List all processor sets on host.
+ */
+routine host_processor_sets(
+		host		: host_t;
+	out	processor_sets	: processor_set_name_array_t);
+
+/*
+ *	Get control port for a processor set.
+ */
+routine host_processor_set_priv(
+		host_priv	: host_priv_t;
+		set_name	: processor_set_name_t;
+	out	set		: processor_set_t);
+
+routine thread_depress_abort(
+		thread		: thread_t);
+
+/*
+ *	Set the time on this host.
+ *	Only available to privileged users.
+ */
+routine host_set_time(
+		host_priv	: host_priv_t;
+		new_time	: time_value_t);
+
+/*
+ *	Arrange for the time on this host to be gradually changed
+ *	by an adjustment value, and return the old value.
+ *	Only available to privileged users.
+ */
+routine	host_adjust_time(
+		host_priv	: host_priv_t;
+	in	new_adjustment	: time_value_t;
+	out	old_adjustment	: time_value_t);
+
+/*
+ *	Get the time on this host.
+ *	Available to all.
+ */
+routine	host_get_time(
+		host		: host_t;
+	out	current_time	: time_value_t);
+
+/*
+ *	Reboot this host.
+ *	Only available to privileged users.
+ */
+routine host_reboot(
+		host_priv	: host_priv_t;
+		options		: int);
+
+/*
+ *	Specify that the range of the virtual address space
+ *	of the target task must not cause page faults for
+ *	the indicated accesses.
+ *
+ *	[ To unwire the pages, specify VM_PROT_NONE. ]
+ */
+routine	vm_wire(
+		host_priv	: host_priv_t;
+		task		: vm_task_t;
+		address		: vm_address_t;
+		size		: vm_size_t;
+		access		: vm_prot_t);
+
+/*
+ *	Specify that the target thread must always be able
+ *	to run and to allocate memory.
+ */
+routine	thread_wire(
+		host_priv	: host_priv_t;
+		thread		: thread_t;
+		wired		: boolean_t);
+
+/*
+ *	Return information about this host.
+ */
+
+routine host_info(
+		host		: host_t;
+		flavor		: int;
+	out	host_info_out	: host_info_t, CountInOut);
+
+
+/*
+ *	Return information about this processor.
+ */
+routine processor_info(
+		processor	: processor_t;
+		flavor		: int;
+	out	host		: host_t;
+	out	processor_info_out: processor_info_t, CountInOut);
+
+/*
+ *	Get information about processor set.
+ */
+routine processor_set_info(
+		set_name	: processor_set_name_t;
+		flavor		: int;
+	out	host		: host_t;
+	out	info_out	: processor_set_info_t, CountInOut);
+
+/*
+ *	Do something machine-dependent to processor.
+ */
+routine processor_control(
+		processor	: processor_t;
+		processor_cmd	: processor_info_t);
+
+/*
+ *      Get boot configuration information from kernel.
+ */
+routine host_get_boot_info(
+		host_priv	: host_priv_t;
+	out	boot_info	: kernel_boot_info_t);

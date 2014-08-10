@@ -1,0 +1,41 @@
+dnl
+dnl Copyright (c) 1994 The University of Utah and
+dnl the Center for Software Science (CSS).  All rights reserved.
+dnl
+dnl Permission to use, copy, modify and distribute this software and its
+dnl documentation is hereby granted, provided that both the copyright
+dnl notice and this permission notice appear in all copies of the
+dnl software, derivative works or modified versions, and any portions
+dnl thereof, and that both notices appear in supporting documentation.
+dnl
+dnl THE UNIVERSITY OF UTAH AND CSS ALLOW FREE USE OF THIS SOFTWARE IN ITS "AS
+dnl IS" CONDITION.  THE UNIVERSITY OF UTAH AND CSS DISCLAIM ANY LIABILITY OF
+dnl ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
+dnl
+dnl CSS requests users of this software to return to css-dist@cs.utah.edu any
+dnl improvements that they make and grant CSS redistribution rights.
+dnl
+dnl      Author: Bryan Ford, University of Utah CSS
+dnl
+
+# Pass explicit options through to the Makeconf file.
+AC_SUBST(enable_mp)
+AC_SUBST(enable_libmach)
+AC_SUBST(with_elf)
+AC_SUBST(enable_fipc)
+
+# If we're using elf, add -D__ELF__ to the preprocessor definitions line.
+AC_ARG_WITH(elf,
+	[  --with-elf              assume that compiler uses ELF format instead of a.out],
+	[AC_DEFINE(__ELF__)])
+
+# If user specified --enable-linuxdev, add -DLINUX_DEV to DEFS.
+AC_ARG_ENABLE(linuxdev,
+	[  --enable-linuxdev       use Linux device drivers instead of Mach drivers],
+	[AC_DEFINE(LINUX_DEV)])
+
+# If user specified --enable-fipc, add -DFIPC to DEFS.
+AC_ARG_ENABLE(fipc,
+	[  --enable-fipc           enable fipc system calls],
+	[AC_DEFINE(FIPC)])
+

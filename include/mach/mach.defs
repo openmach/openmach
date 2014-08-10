@@ -1,0 +1,958 @@
+/*
+ * Mach Operating System
+ * Copyright (c) 1991,1990,1989,1988 Carnegie Mellon University.
+ * Copyright (c) 1993,1994 The University of Utah and
+ * the Computer Systems Laboratory (CSL).
+ * All rights reserved.
+ *
+ * Permission to use, copy, modify and distribute this software and its
+ * documentation is hereby granted, provided that both the copyright
+ * notice and this permission notice appear in all copies of the
+ * software, derivative works or modified versions, and any portions
+ * thereof, and that both notices appear in supporting documentation.
+ *
+ * CARNEGIE MELLON, THE UNIVERSITY OF UTAH AND CSL ALLOW FREE USE OF
+ * THIS SOFTWARE IN ITS "AS IS" CONDITION, AND DISCLAIM ANY LIABILITY
+ * OF ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF
+ * THIS SOFTWARE.
+ *
+ * Carnegie Mellon requests users of this software to return to
+ *
+ *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
+ *  School of Computer Science
+ *  Carnegie Mellon University
+ *  Pittsburgh PA 15213-3890
+ *
+ * any improvements or extensions that they make and grant Carnegie Mellon
+ * the rights to redistribute these changes.
+ */
+/*
+ *	Matchmaker definitions file for Mach kernel interface.
+ */
+
+#ifdef	MACH_KERNEL
+#include <mach_ipc_compat.h>
+
+simport <kern/compat_xxx_defs.h>;	/* for obsolete routines */
+#endif	/* MACH_KERNEL */
+
+subsystem
+#if	KERNEL_USER
+	  KernelUser
+#endif	/* KERNEL_USER */
+#if	KERNEL_SERVER
+	  KernelServer
+#endif	/* KERNEL_SERVER */
+		       mach 2000;
+
+#ifdef	KERNEL_USER
+userprefix r_;
+#endif	/* KERNEL_USER */
+
+#include <mach/std_types.defs>
+#include <mach/mach_types.defs>
+
+skip;	/* old port_allocate */
+skip;	/* old port_deallocate */
+skip;	/* old port_enable */
+skip;	/* old port_disable */
+skip;	/* old port_select */
+skip;	/* old port_set_backlog */
+skip;	/* old port_status */
+
+/*
+ *	Create a new task with an empty set of IPC rights,
+ *	and having an address space constructed from the
+ *	target task (or empty, if inherit_memory is FALSE).
+ */
+routine task_create(
+		target_task	: task_t;
+		inherit_memory	: boolean_t;
+	out	child_task	: task_t);
+
+/*
+ *	Destroy the target task, causing all of its threads
+ *	to be destroyed, all of its IPC rights to be deallocated,
+ *	and all of its address space to be deallocated.
+ */
+routine task_terminate(
+		target_task	: task_t);
+
+/*
+ *	Get user-level handler entry points for all
+ *	emulated system calls.
+ */
+routine task_get_emulation_vector(
+		task		: task_t;
+	out	vector_start	: int;
+	out	emulation_vector: emulation_vector_t);
+
+/*
+ *	Establish user-level handlers for the specified
+ *	system calls. Non-emulated system calls are specified
+ *	with emulation_vector[i] == EML_ROUTINE_NULL.
+ */
+routine task_set_emulation_vector(
+		task		: task_t;
+		vector_start	: int;
+		emulation_vector: emulation_vector_t);
+
+
+/*
+ *	Returns the set of threads belonging to the target task.
+ */
+routine task_threads(
+		target_task	: task_t;
+	out	thread_list	: thread_array_t);
+
+/*
+ *	Returns information about the target task.
+ */
+routine	task_info(
+		target_task	: task_t;
+		flavor		: int;
+	out	task_info_out	: task_info_t, CountInOut);
+
+
+skip;	/* old task_status */
+skip;	/* old task_set_notify */
+skip;	/* old thread_create */
+
+/*
+ *	Destroy the target thread.
+ */
+routine thread_terminate(
+		target_thread	: thread_t);
+
+/*
+ *	Return the selected state information for the target
+ *	thread.  If the thread is currently executing, the results
+ *	may be stale.  [Flavor THREAD_STATE_FLAVOR_LIST provides a
+ *	list of valid flavors for the target thread.]
+ */
+routine thread_get_state(
+		target_thread	: thread_t;
+		flavor		: int;
+	out	old_state	: thread_state_t, CountInOut);
+
+/*
+ *	Set the selected state information for the target thread.
+ *	If the thread is currently executing, the state change
+ *	may be ill-defined.
+ */
+routine	thread_set_state(
+		target_thread	: thread_t;
+		flavor		: int;
+		new_state	: thread_state_t);
+
+/*
+ *	Returns information about the target thread.
+ */
+routine	thread_info(
+		target_thread	: thread_t;
+		flavor		: int;
+	out	thread_info_out	: thread_info_t, CountInOut);
+
+skip;	/* old thread_mutate */
+
+/*
+ *	Allocate zero-filled memory in the address space
+ *	of the target task, either at the specified address,
+ *	or wherever space can be found (if anywhere is TRUE),
+ *	of the specified size.  The address at which the
+ *	allocation actually took place is returned.
+ */
+#ifdef	EMULATOR
+skip;	/* the emulator redefines vm_allocate using vm_map */
+#else	EMULATOR
+routine vm_allocate(
+		target_task	: vm_task_t;
+	inout	address		: vm_address_t;
+		size		: vm_size_t;
+		anywhere	: boolean_t);
+#endif	EMULATOR
+
+skip;	/* old vm_allocate_with_pager */
+
+/*
+ *	Deallocate the specified range from the virtual
+ *	address space of the target task.
+ */
+routine vm_deallocate(
+		target_task	: vm_task_t;
+		address		: vm_address_t;
+		size		: vm_size_t);
+
+/*
+ *	Set the current or maximum protection attribute
+ *	for the specified range of the virtual address
+ *	space of the target task.  The current protection
+ *	limits the memory access rights of threads within
+ *	the task; the maximum protection limits the accesses
+ *	that may be given in the current protection.
+ *	Protections are specified as a set of {read, write, execute}
+ *	*permissions*.
+ */
+routine vm_protect(
+		target_task	: vm_task_t;
+		address		: vm_address_t;
+		size		: vm_size_t;
+		set_maximum	: boolean_t;
+		new_protection	: vm_prot_t);
+
+/*
+ *	Set the inheritance attribute for the specified range
+ *	of the virtual address space of the target task.
+ *	The inheritance value is one of {none, copy, share}, and
+ *	specifies how the child address space should acquire
+ *	this memory at the time of a task_create call.
+ */
+routine vm_inherit(
+		target_task	: vm_task_t;
+		address		: vm_address_t;
+		size		: vm_size_t;
+		new_inheritance	: vm_inherit_t);
+
+/*
+ *	Returns the contents of the specified range of the
+ *	virtual address space of the target task.  [The
+ *	range must be aligned on a virtual page boundary,
+ *	and must be a multiple of pages in extent.  The
+ *	protection on the specified range must permit reading.]
+ */
+routine vm_read(
+		target_task	: vm_task_t;
+		address		: vm_address_t;
+		size		: vm_size_t;
+	out	data		: pointer_t);
+
+/*
+ *	Writes the contents of the specified range of the
+ *	virtual address space of the target task.  [The
+ *	range must be aligned on a virtual page boundary,
+ *	and must be a multiple of pages in extent.  The
+ *	protection on the specified range must permit writing.]
+ */
+routine vm_write(
+		target_task	: vm_task_t;
+		address		: vm_address_t;
+		data		: pointer_t);
+
+/*
+ *	Copy the contents of the source range of the virtual
+ *	address space of the target task to the destination
+ *	range in that same address space.  [Both of the
+ *	ranges must be aligned on a virtual page boundary,
+ *	and must be multiples of pages in extent.  The
+ *	protection on the source range must permit reading,
+ *	and the protection on the destination range must
+ *	permit writing.]
+ */
+routine vm_copy(
+		target_task	: vm_task_t;
+		source_address	: vm_address_t;
+		size		: vm_size_t;
+		dest_address	: vm_address_t);
+
+/*
+ *	Returns information about the contents of the virtual
+ *	address space of the target task at the specified
+ *	address.  The returned protection, inheritance, sharing
+ *	and memory object values apply to the entire range described
+ *	by the address range returned; the memory object offset
+ *	corresponds to the beginning of the address range.
+ *	[If the specified address is not allocated, the next
+ *	highest address range is described.  If no addresses beyond
+ *	the one specified are allocated, the call returns KERN_NO_SPACE.]
+ */
+routine vm_region(
+		target_task	: vm_task_t;
+	inout	address		: vm_address_t;
+	out	size		: vm_size_t;
+	out	protection	: vm_prot_t;
+	out	max_protection	: vm_prot_t;
+	out	inheritance	: vm_inherit_t;
+	out	is_shared	: boolean_t;
+	/* avoid out-translation of the argument */
+	out	object_name	: memory_object_name_t =
+					MACH_MSG_TYPE_MOVE_SEND
+					ctype: mach_port_t;
+	out	offset		: vm_offset_t);
+
+/*
+ *	Return virtual memory statistics for the host
+ *	on which the target task resides.  [Note that the
+ *	statistics are not specific to the target task.]
+ */
+routine vm_statistics(
+		target_task	: vm_task_t;
+	out	vm_stats	: vm_statistics_data_t);
+
+skip;	/* old task_by_u*x_pid */
+skip;	/* old vm_pageable */
+
+/*
+ *	Stash a handful of ports for the target task; child
+ *	tasks inherit this stash at task_create time.
+ */
+routine	mach_ports_register(
+		target_task	: task_t;
+		init_port_set	: mach_port_array_t =
+					^array[] of mach_port_t);
+
+/*
+ *	Retrieve the stashed ports for the target task.
+ */
+routine	mach_ports_lookup(
+		target_task	: task_t;
+	out	init_port_set	: mach_port_array_t =
+					^array[] of mach_port_t);
+
+skip;	/* old u*x_pid */
+skip;	/* old netipc_listen */
+skip;	/* old netipc_ignore */
+
+/*
+ *	Provide the data contents of a range of the given memory
+ *	object, with the access restriction specified.  [Only
+ *	whole virtual pages of data can be accepted; partial pages
+ *	will be discarded.  Data should be provided on request, but
+ *	may be provided in advance as desired.  When data already
+ *	held by this kernel is provided again, the new data is ignored.
+ *	The access restriction is the subset of {read, write, execute}
+ *	which are prohibited.  The kernel may not provide any data (or
+ *	protection) consistency among pages with different virtual page
+ *	alignments within the same object.]
+ */
+simpleroutine memory_object_data_provided(
+		memory_control	: memory_object_control_t;
+		offset		: vm_offset_t;
+		data		: pointer_t;
+		lock_value	: vm_prot_t);
+
+/*
+ *	Indicate that a range of the given temporary memory object does
+ *	not exist, and that the backing memory object should be used
+ *	instead (or zero-fill memory be used, if no backing object exists).
+ *	[This call is intended for use only by the default memory manager.
+ *	It should not be used to indicate a real error --
+ *	memory_object_data_error should be used for that purpose.]
+ */
+simpleroutine memory_object_data_unavailable(
+		memory_control	: memory_object_control_t;
+		offset		: vm_offset_t;
+		size		: vm_size_t);
+
+/*
+ *	Retrieves the attributes currently associated with
+ *	a memory object.
+ */
+routine memory_object_get_attributes(
+		memory_control	: memory_object_control_t;
+	out	object_ready	: boolean_t;
+	out	may_cache	: boolean_t;
+	out	copy_strategy	: memory_object_copy_strategy_t);
+
+/*
+ *	Sets the default memory manager, the port to which
+ *	newly-created temporary memory objects are delivered.
+ *	[See (memory_object_default)memory_object_create.]
+ *	The old memory manager port is returned.
+ */
+routine vm_set_default_memory_manager(
+		host_priv	: host_priv_t;
+	inout	default_manager	: mach_port_make_send_t);
+
+skip;	/* old pager_flush_request */
+
+/*
+ *	Control use of the data associated with the given
+ *	memory object.  For each page in the given range,
+ *	perform the following operations, in order:
+ *		1)  restrict access to the page (disallow
+ *		    forms specified by "prot");
+ *		2)  write back modifications (if "should_return"
+ *		    is RETURN_DIRTY and the page is dirty, or
+ *		    "should_return" is RETURN_ALL and the page
+ * 		    is either dirty or precious); and,
+ *		3)  flush the cached copy (if "should_flush"
+ *		    is asserted).
+ *	The set of pages is defined by a starting offset
+ *	("offset") and size ("size").  Only pages with the
+ *	same page alignment as the starting offset are
+ *	considered.
+ *
+ *	A single acknowledgement is sent (to the "reply_to"
+ *	port) when these actions are complete.
+ *
+ *	There are two versions of this routine because IPC distinguishes
+ *	between booleans and integers (a 2-valued integer is NOT a
+ *	boolean).  The new routine is backwards compatible at the C
+ *	language interface.
+ */
+simpleroutine xxx_memory_object_lock_request(
+		memory_control	: memory_object_control_t;
+		offset		: vm_offset_t;
+		size		: vm_size_t;
+		should_clean	: boolean_t;
+		should_flush	: boolean_t;
+		lock_value	: vm_prot_t;
+		reply_to	: mach_port_t =
+			MACH_MSG_TYPE_MAKE_SEND_ONCE|polymorphic);
+
+
+simpleroutine memory_object_lock_request(
+		memory_control	: memory_object_control_t;
+		offset		: vm_offset_t;
+		size		: vm_size_t;
+		should_return	: memory_object_return_t;
+		should_flush	: boolean_t;
+		lock_value	: vm_prot_t;
+		reply_to	: mach_port_t =
+			MACH_MSG_TYPE_MAKE_SEND_ONCE|polymorphic);
+
+/* obsolete */
+routine xxx_task_get_emulation_vector(
+		task		: task_t;
+	out	vector_start	: int;
+	out	emulation_vector: xxx_emulation_vector_t, IsLong);
+
+/* obsolete */
+routine xxx_task_set_emulation_vector(
+		task		: task_t;
+		vector_start	: int;
+		emulation_vector: xxx_emulation_vector_t, IsLong);
+
+/*
+ *	Returns information about the host on which the
+ *	target object resides.  [This object may be
+ *	a task, thread, or memory_object_control port.]
+ */
+routine xxx_host_info(
+		target_task	: mach_port_t;
+	out	info		: machine_info_data_t);
+
+/*
+ *	Returns information about a particular processor on
+ *	the host on which the target task resides.
+ */
+routine xxx_slot_info(
+		target_task	: task_t;
+		slot		: int;
+	out	info		: machine_slot_data_t);
+
+/*
+ *	Performs control operations (currently only
+ *	turning off or on) on a particular processor on
+ *	the host on which the target task resides.
+ */
+routine xxx_cpu_control(
+		target_task	: task_t;
+		cpu		: int;
+		running		: boolean_t);
+
+skip;	/* old thread_statistics */
+skip;	/* old task_statistics */
+skip;	/* old netport_init */
+skip;	/* old netport_enter */
+skip;	/* old netport_remove */
+skip;	/* old thread_set_priority */
+
+/*
+ *	Increment the suspend count for the target task.
+ *	No threads within a task may run when the suspend
+ *	count for that task is non-zero.
+ */
+routine	task_suspend(
+		target_task	: task_t);
+
+/*
+ *	Decrement the suspend count for the target task,
+ *	if the count is currently non-zero.  If the resulting
+ *	suspend	count is zero, then threads within the task
+ *	that also have non-zero suspend counts may execute.
+ */
+routine	task_resume(
+		target_task	: task_t);
+
+/*
+ *	Returns the current value of the selected special port
+ *	associated with the target task.
+ */
+routine task_get_special_port(
+		task		: task_t;
+		which_port	: int;
+	out	special_port	: mach_port_t);
+
+/*
+ *	Set one of the special ports associated with the
+ *	target task.
+ */
+routine task_set_special_port(
+		task		: task_t;
+		which_port	: int;
+		special_port	: mach_port_t);
+
+/* obsolete */
+routine	xxx_task_info(
+		target_task	: task_t;
+		flavor		: int;
+	out	task_info_out	: task_info_t, IsLong);
+
+
+/*
+ *	Create a new thread within the target task, returning
+ *	the port representing that new thread.  The
+ *	initial execution state of the thread is undefined.
+ */
+routine thread_create(
+		parent_task	: task_t;
+	out	child_thread	: thread_t);
+
+/*
+ *	Increment the suspend count for the target thread.
+ *	Once this call has completed, the thread will not
+ *	execute any further user or meta- instructions.
+ *	Once suspended, a thread may not execute again until
+ *	its suspend count is zero, and the suspend count
+ *	for its task is also zero.
+ */
+routine	thread_suspend(
+		target_thread	: thread_t);
+
+/*
+ *	Decrement the suspend count for the target thread,
+ *	if that count is not already zero.
+ */
+routine	thread_resume(
+		target_thread	: thread_t);
+
+/*
+ *	Cause any user or meta- instructions currently being
+ *	executed by the target thread to be aborted.  [Meta-
+ *	instructions consist of the basic traps for IPC
+ *	(e.g., msg_send, msg_receive) and self-identification
+ *	(e.g., task_self, thread_self, thread_reply).  Calls
+ *	described by MiG interfaces are not meta-instructions
+ *	themselves.]
+ */
+routine thread_abort(
+		target_thread	: thread_t);
+
+/* obsolete */
+routine xxx_thread_get_state(
+		target_thread	: thread_t;
+		flavor		: int;
+	out	old_state	: thread_state_t, IsLong);
+
+/* obsolete */
+routine	xxx_thread_set_state(
+		target_thread	: thread_t;
+		flavor		: int;
+		new_state	: thread_state_t, IsLong);
+
+/*
+ *	Returns the current value of the selected special port
+ *	associated with the target thread.
+ */
+routine thread_get_special_port(
+		thread		: thread_t;
+		which_port	: int;
+	out	special_port	: mach_port_t);
+
+/*
+ *	Set one of the special ports associated with the
+ *	target thread.
+ */
+routine thread_set_special_port(
+		thread		: thread_t;
+		which_port	: int;
+		special_port	: mach_port_t);
+
+/* obsolete */
+routine	xxx_thread_info(
+		target_thread	: thread_t;
+		flavor		: int;
+	out	thread_info_out	: thread_info_t, IsLong);
+
+/*
+ *	Establish a user-level handler for the specified
+ *	system call.
+ */
+routine task_set_emulation(
+		target_port	: task_t;
+		routine_entry_pt: vm_address_t;
+		routine_number  : int);	
+
+/*
+ *      Establish restart pc for interrupted atomic sequences.
+ *	This reuses the message number for the old task_get_io_port.
+ *	See task_info.h for description of flavors.
+ *	
+ */
+routine task_ras_control(
+		target_task     : task_t;
+		basepc          : vm_address_t;
+		boundspc        : vm_address_t;
+		flavor		: int);
+		
+		
+
+skip;	/* old host_ipc_statistics */
+
+
+#if	MACH_IPC_COMPAT
+
+/*
+ *	Returns the set of port and port set names
+ *	to which the target task has access, along with
+ *	the type (set or port) for each name.
+ */
+routine port_names(
+		task		: ipc_space_t;
+	out	port_names_p	: port_name_array_t;
+	out	port_types	: port_type_array_t);
+
+/*
+ *	Returns the type (set or port) for the port name
+ *	within the target task.
+ */
+routine port_type(
+		task		: ipc_space_t;
+		port_name	: port_name_t;
+	out	port_type_p	: port_type_t);
+
+/*
+ *	Changes the name by which a port (or port set) is known to
+ *	the target task.
+ */
+routine port_rename(
+		task		: ipc_space_t;
+		old_name	: port_name_t;
+		new_name	: port_name_t);
+
+/*
+ *	Allocate a new port (with all rights) in the target task.
+ *	The port name in that task is returned.
+ */
+routine port_allocate(
+		task		: ipc_space_t;
+	out	port_name	: port_name_t);
+
+/*
+ *	Deallocate the port with the given name from the target task.
+ */
+routine port_deallocate(
+		task		: ipc_space_t;
+		port_name	: port_name_t);
+
+/*
+ *	Set the number of messages that may be queued to
+ *	the port in the target task with the given name
+ *	before further message queueing operations block.
+ *	The target task must hold receive rights for the
+ *	port named.
+ */
+routine port_set_backlog(
+		task		: ipc_space_t;
+		port_name	: port_name_t;
+		backlog		: int);
+
+/*
+ *	Return information about the port with the given
+ *	name in the target task.  Only the ownership and
+ *	receive_rights results are meaningful unless the
+ *	target task holds receive rights for the port.
+ */
+routine port_status(
+		task		: ipc_space_t;
+		port_name	: port_name_t;
+	out	enabled		: port_set_name_t;
+	out	num_msgs	: int;
+	out	backlog		: int;
+	out	ownership	: boolean_t;
+	out	receive_rights	: boolean_t);
+
+/*
+ *	Allocate a new port set in the target task, returning
+ *	the name of that new port set.  [The new set is
+ *	initially empty.]
+ */
+routine port_set_allocate(
+		task		: ipc_space_t;
+	out	set_name	: port_set_name_t);
+
+/*
+ *	Deallocate the named port set from the target task.
+ *	Ports that are currently members of the named port
+ *	set are first removed from the set.
+ */
+routine port_set_deallocate(
+		task		: ipc_space_t;
+		set_name	: port_set_name_t);
+
+/*
+ *	Add the named port to the port set named within
+ *	the target task.  [If the port currently is a member
+ *	of another port set, it is removed from that set.]
+ */
+routine port_set_add(
+		task		: ipc_space_t;
+		set_name	: port_set_name_t;
+		port_name	: port_name_t);
+
+/*
+ *	Remove the named port from the port set named within
+ *	the target task.
+ */
+routine port_set_remove(
+		task		: ipc_space_t;
+		port_name	: port_name_t);
+
+/*
+ *	Returns the current set of ports that are members
+ *	of the named port set in the target task.
+ */
+routine port_set_status(
+		task		: ipc_space_t;
+		set_name	: port_set_name_t;
+	out	members		: port_name_array_t);
+
+/*
+ *	Insert send rights for the specified port into
+ *	the target task with the specified port name.
+ *	[If the name is in use, or the target task already
+ *	has another name for the specified port, then
+ *	the operation will fail.]
+ */
+routine port_insert_send(
+		task		: ipc_space_t;
+		my_port		: port_t;
+		his_name	: port_name_t);
+
+/*
+ *	Returns send rights for the named port in the
+ *	target task, removing that port name and port
+ *	send rights from the target task.  [If the
+ *	target task holds receive rights for this port,
+ *	the operation will fail.]
+ */
+routine port_extract_send(
+		task		: ipc_space_t;
+		his_name	: port_name_t;
+	out	his_port	: port_t);
+
+/*
+ *	Insert receive rights for the specified port into
+ *	the target task with the specified port name.
+ *	[If the name is in use, or the target task already
+ *	has another name for the specified port, then
+ *	the operation will fail.
+ */
+routine port_insert_receive(
+		task		: ipc_space_t;
+		my_port		: port_all_t;
+		his_name	: port_name_t);
+
+/*
+ *	Returns receive rights for the named port in the
+ *	target task, removing that port name and all port
+ *	rights from the target task.
+ */
+routine port_extract_receive(
+		task		: ipc_space_t;
+		his_name	: port_name_t;
+	out	his_port	: port_all_t);
+
+#else	MACH_IPC_COMPAT
+
+skip;	/* old port_names */
+skip;	/* old port_type */
+skip;	/* old port_rename */
+skip;	/* old port_allocate */
+skip;	/* old port_deallocate */
+skip;	/* old port_set_backlog */
+skip;	/* old port_status */
+skip;	/* old port_set_allocate */
+skip;	/* old port_set_deallocate */
+skip;	/* old port_set_add */
+skip;	/* old port_set_remove */
+skip;	/* old port_set_status */
+skip;	/* old port_insert_send */
+skip;	/* old port_extract_send */
+skip;	/* old port_insert_receive */
+skip;	/* old port_extract_receive */
+
+#endif	MACH_IPC_COMPAT
+
+/*
+ *	Map a user-defined memory object into the virtual address
+ *	space of the target task.  If desired (anywhere is TRUE),
+ *	the kernel will find a suitable address range of the
+ *	specified size; else, the specific address will be allocated.
+ *
+ *	The beginning address of the range will be aligned on a virtual
+ *	page boundary, be at or beyond the address specified, and
+ *	meet the mask requirements (bits turned on in the mask must not
+ *	be turned on in the result); the size of the range, in bytes,
+ *	will be rounded	up to an integral number of virtual pages.
+ *
+ *	The memory in the resulting range will be associated with the
+ *	specified memory object, with the beginning of the memory range
+ *	referring to the specified offset into the memory object.
+ *
+ *	The mapping will take the current and maximum protections and
+ *	the inheritance attributes specified; see the vm_protect and
+ *	vm_inherit calls for a description of these attributes.
+ *
+ *	If desired (copy is TRUE), the memory range will be filled
+ *	with a copy of the data from the memory object; this copy will
+ *	be private to this mapping in this target task.  Otherwise,
+ *	the memory in this mapping will be shared with other mappings
+ *	of the same memory object at the same offset (in this task or
+ *	in other tasks).  [The Mach kernel only enforces shared memory
+ *	consistency among mappings on one host with similar page alignments.
+ *	The user-defined memory manager for this object is responsible
+ *	for further consistency.]
+ */
+#ifdef	EMULATOR
+routine htg_vm_map(
+		target_task	: vm_task_t;
+	ureplyport reply_port	: mach_port_make_send_once_t;
+	inout	address		: vm_address_t;
+		size		: vm_size_t;
+		mask		: vm_address_t;
+		anywhere	: boolean_t;
+		memory_object	: memory_object_t;
+		offset		: vm_offset_t;
+		copy		: boolean_t;
+		cur_protection	: vm_prot_t;
+		max_protection	: vm_prot_t;
+		inheritance	: vm_inherit_t);
+#else	EMULATOR
+routine vm_map(
+		target_task	: vm_task_t;
+	inout	address		: vm_address_t;
+		size		: vm_size_t;
+		mask		: vm_address_t;
+		anywhere	: boolean_t;
+		memory_object	: memory_object_t;
+		offset		: vm_offset_t;
+		copy		: boolean_t;
+		cur_protection	: vm_prot_t;
+		max_protection	: vm_prot_t;
+		inheritance	: vm_inherit_t);
+#endif	EMULATOR
+
+/*
+ *	Indicate that a range of the specified memory object cannot
+ *	be provided at this time.  [Threads waiting for memory pages
+ *	specified by this call will experience a memory exception.
+ *	Only threads waiting at the time of the call are affected.]
+ */
+simpleroutine memory_object_data_error(
+		memory_control	: memory_object_control_t;
+		offset		: vm_offset_t;
+		size		: vm_size_t;
+		error_value	: kern_return_t);
+
+/*
+ *	Make decisions regarding the use of the specified
+ *	memory object.
+ */
+simpleroutine memory_object_set_attributes(
+		memory_control	: memory_object_control_t;
+		object_ready	: boolean_t;
+		may_cache	: boolean_t;
+		copy_strategy	: memory_object_copy_strategy_t);
+
+/*
+ */
+simpleroutine memory_object_destroy(
+		memory_control	: memory_object_control_t;
+		reason		: kern_return_t);
+
+/*
+ *	Provide the data contents of a range of the given memory
+ *	object, with the access restriction specified, optional
+ *	precious attribute, and reply message.  [Only
+ *	whole virtual pages of data can be accepted; partial pages
+ *	will be discarded.  Data should be provided on request, but
+ *	may be provided in advance as desired.  When data already
+ *	held by this kernel is provided again, the new data is ignored.
+ *	The access restriction is the subset of {read, write, execute}
+ *	which are prohibited.  The kernel may not provide any data (or
+ *	protection) consistency among pages with different virtual page
+ *	alignments within the same object.  The precious value controls
+ *	how the kernel treats the data.  If it is FALSE, the kernel treats
+ *	its copy as a temporary and may throw it away if it hasn't been
+ *	changed.  If the precious value is TRUE, the kernel treats its
+ *	copy as a data repository and promises to return it to the manager;
+ *	the manager may tell the kernel to throw it away instead by flushing
+ *	and not cleaning the data -- see memory_object_lock_request.  The
+ *	reply_to port is for a compeletion message; it will be
+ *	memory_object_supply_completed.]
+ */
+
+simpleroutine memory_object_data_supply(
+		memory_control	: memory_object_control_t;
+		offset		: vm_offset_t;
+		data		: pointer_t, Dealloc[];
+		lock_value	: vm_prot_t;
+		precious	: boolean_t;
+		reply_to	: mach_port_t =
+			MACH_MSG_TYPE_MAKE_SEND_ONCE|polymorphic);
+
+simpleroutine memory_object_ready(
+		memory_control	: memory_object_control_t;
+		may_cache	: boolean_t;
+		copy_strategy	: memory_object_copy_strategy_t);
+
+simpleroutine memory_object_change_attributes(
+		memory_control	: memory_object_control_t;
+		may_cache	: boolean_t;
+		copy_strategy	: memory_object_copy_strategy_t;
+		reply_to	: mach_port_t =
+			MACH_MSG_TYPE_MAKE_SEND_ONCE|polymorphic);
+
+skip;	/* old host_callout_statistics_reset */
+skip;	/* old port_set_select */
+
+#if	MACH_IPC_COMPAT
+
+/*
+ *	Sets a backup port for the named port.  The task
+ *	must have receive rights for the named port.
+ *	Returns the previous backup port, if any.
+ */
+
+routine port_set_backup(
+		task		: ipc_space_t;
+		port_name	: port_name_t;
+		backup		: port_t = MACH_MSG_TYPE_MAKE_SEND
+				  ctype: mach_port_t;
+	out	previous	: port_t);
+
+#else	MACH_IPC_COMPAT
+
+skip;	/* old port_set_backup */
+
+#endif	MACH_IPC_COMPAT
+
+/*
+ *	Set/Get special properties of memory associated
+ *	to some virtual address range, such as cachability, 
+ *	migrability, replicability.  Machine-dependent.
+ */
+routine vm_machine_attribute(
+		target_task	: vm_task_t;
+		address		: vm_address_t;
+		size		: vm_size_t;
+		attribute	: vm_machine_attribute_t;
+	inout	value		: vm_machine_attribute_val_t);
+
+skip;	/* old host_fpa_counters_reset */
+
+/*
+ *	There is no more room in this interface for additional calls.
+ */

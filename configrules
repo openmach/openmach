@@ -1,0 +1,114 @@
+dnl
+dnl Copyright (c) 1995,1994 The University of Utah and
+dnl the Computer Systems Laboratory (CSL).  All rights reserved.
+dnl
+dnl Permission to use, copy, modify and distribute this software and its
+dnl documentation is hereby granted, provided that both the copyright
+dnl notice and this permission notice appear in all copies of the
+dnl software, derivative works or modified versions, and any portions
+dnl thereof, and that both notices appear in supporting documentation.
+dnl
+dnl THE UNIVERSITY OF UTAH AND CSL ALLOW FREE USE OF THIS SOFTWARE IN ITS "AS
+dnl IS" CONDITION.  THE UNIVERSITY OF UTAH AND CSL DISCLAIM ANY LIABILITY OF
+dnl ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
+dnl
+dnl CSL requests users of this software to return to csl-dist@cs.utah.edu any
+dnl improvements that they make and grant CSL redistribution rights.
+dnl
+dnl      Author: Bryan Ford, University of Utah CSL
+dnl
+
+dnl This file is meant to be included by a configure.in file
+dnl in the top of a machine-dependent source tree.
+dnl It invokes a number of autoconf macros
+dnl which should apply to all machines.
+
+# Locate the generic Mach 4 source tree.
+# By default, try the same directory as $srcdir,
+# but replace the last component with 'mach4'.
+AC_WITH_SRCDIR(mach4,gsrcdir,generic Mach 4,include/mach/mach.defs,
+	[`echo $srcdir|sed -e 's%[[^/][^/]]*$%mach4%'`],
+	[  --with-mach4=DIR        specify the location of the generic mach4 source tree])
+
+# Find an awk, and make sure it has a toupper() function...  XXX
+AC_PROG_AWK
+if test "$AWK" != "gawk"; then
+	AC_WARN([Note: Mach requires a version of AWK with a toupper function.])
+	AC_WARN([Most do, including GNU and POSIX awk, but a few older ones don't.])
+	AC_WARN([If you have trouble, try installing GNU awk (gawk).])
+fi
+
+# Other programs we need.
+AC_PROG_LEX
+AC_PROG_YACC
+AC_PROG_INSTALL
+
+# If the user specified --enable-debug, add -DDEBUG to the DEFS line.
+AC_ARG_ENABLE(debug,
+	[  --enable-debug          enable internal debugging features and sanity checks],
+	[AC_DEFINE(DEBUG)])
+
+# Temporary kludge needed because MIG is part of the Mach source tree.
+# HOST_CC should really be called BUILD_CC.
+AC_PROG_CC
+HOST_CC=$CC
+AC_SUBST(HOST_CC)
+AC_FUNC_VPRINTF
+# ac_strerror instead?
+AC_CHECK_FUNCS(strerror)
+
+# Figure out what tools we're going to use to compile stuff with.
+# Normally, the --target option on the configure line wouldn't make sense,
+# because Mach isn't a build tool that can be configured to cross-build.
+# (It can itself be cross-built, but it doesn't cross-build anything else.)
+# However, as a convenience to the user (and as a backward compatibility hack),
+# if the --target option is specified, then it actually specifies the host,
+# and the names of all the build tools used to build Mach are automatically
+# prefixed with that name.  Thus, saying `configure --target=i386-mach'
+# means to build Mach using i386-mach-gcc, i386-mach-ld, etc.
+if test "$target" = "NONE"; then
+
+	# Find the primary build tools we'll be using.
+	# XXX CC already gotten above.
+	LD="ld"; AC_SUBST(LD)
+	STRIP="strip"; AC_SUBST(STRIP)
+	AR="ar"; AC_SUBST(AR)
+	AC_PROG_RANLIB
+	OBJCOPY="objcopy"; AC_SUBST(OBJCOPY)
+
+	# Make sure we have GCC.
+	# Mach won't compile with just any ol' C compiler...
+	if test -z "$GCC"; then
+		AC_ERROR(You need GCC to compile Mach4.)
+	fi
+else
+	# Use the specified "target" as the host machine.
+	if test "$host" = "NONE"; then
+		host=$target
+	fi
+
+	# Use specific program names defined by the target machine name,
+	# and just assume they're available without checking.
+	# Note that these can still be overridden on the make command line.
+	# Be careful not to change the CC variable
+	# until after we're all done with ac_xxx things
+	# that might need to run the C compiler.
+	CC="$target-gcc"
+	LD="$target-ld"
+	STRIP="$target-strip"
+	AR="$target-ar"
+	RANLIB="$target-ranlib"
+	OBJCOPY="$target-objcopy"
+fi
+
+# Find the set of directories that have Makefile.in's in them.
+mach_makefiles=`cd $srcdir; find * -name Makefile.in -print|sort|sed 's%.in$%%g'`
+mach_subdirs=`echo $mach_makefiles|sed 's%/*Makefile%%g'`
+AC_SUBST(mach_subdirs)
+export mach_makefiles
+
+# Pre-create the object directories,
+# because the autoconf-provided mkdir that comes later doesn't use -p.
+mkdir -p $mach_subdirs
+
+AC_OUTPUT($mach_makefiles Makeconf)

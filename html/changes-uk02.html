@@ -1,0 +1,97 @@
+<html>
+<head><title> Changes from MK83 to the UK02-freeze branch </title></head>
+<body>
+<h1> Changes from MK83 to the UK02-freeze branch </h1>
+<hr>
+
+This page contains a brief, high-level outline
+of the major changes made so far in the "UK02" branch,
+with respect to CMU's MK83 kernel which it is based on.
+For a more detailed list of what changed and when,
+see the ChangeLog files in the source trees.
+
+<ul>
+<li>	<b><a href="build-env.html">Build environment</a>:</b>
+	Ripped out the old ODE build environment
+	and replaced it with an easier-to-use GNU-style build environment.
+	<p>
+
+<li>	<b><a href="../../mach4-i386/html/boot-i386.html">New i386 bootstrap system</a>:</b>
+	Replaced the old kludgy microkernel boot loading mechanism,
+	in which the server bootstrap code was loaded in the kernel's BSS area,
+	with a newer, bigger, more powerful, more complex, and even kludgier mechanism. :-)
+	<p>
+
+<li>	<b>Public Includes:</b>
+	Previously Mach exported some public header files
+	that were not under the `mach/' subdirectory,
+	and tended to conflict with identically named header files
+	that Unix C libraries and servers wanted to supply.
+	These have now been moved under the `mach/' subdirectory,
+	to help to get Mach "out of the way" of other higher-level software,
+	and make it less Unix-specific
+	(or, at least, less CMU-UX-single-server specific).
+	Personalities that want to use
+	the Mach-supplied versions of these header files
+	can simply create stub files that cross-include the appropriate Mach files.
+	<p>
+
+	Specific changes:
+	<ul>
+	<li>	<b>`sys/':</b>
+		Mach no longer has a global `sys' include directory.  The needed files
+		in it have been moved to the `mach' directory or to private directories.
+		The `sys' directory should be left available for higher-level OS software.
+		(Already the Hurd was having to kludge around its presence;
+		see below about how to compile it with this version of Mach.)
+		<p>
+
+	<li>	<b>`machine/':</b>
+		Mach no longer exports a global `machine' or `i386' include directory.
+		Again, these are the domain
+		of higher-level software and should not be touched by Mach.
+		There is still a `mach/machine/' subdirectory
+		for publicly exported machine-dependent Mach header files.
+		<p>
+
+	<li>	<b>`cthreads.h':</b>
+		Has been moved to `mach/cthreads.h',
+		because Mach's cthreads library
+		is really only the "default" threads implementation.
+		Higher-level OS personalities, such as the Hurd,
+		need to be able to supply a different version if necessary.
+		If a personality just wants to use Mach's default cthreads library,
+		it can create a `cthreads.h' that simply cross-includes `mach/cthreads.h'.
+		<p>
+	</ul>
+
+<li>	<b>MACH_IPC_COMPAT:</b>
+	Another change that might cause incompatibilities is that MACH_IPC_COMPAT
+	is now <b>not</b> defined by default.  If it breaks anything, you can turn it on
+	by saying `export DEFS=-DMACH_IPC_COMPAT' before running the configure script.
+	If this breaks a lot of important old Mach software (what Mach software? :-) ),
+	I may turn it back on by default.
+	<p>
+
+<li>	<b>htg_vm_map:</b>
+	I don't support the htg_vm_map kludge in libmach, which has no business
+	supporting special obscure presentations for higher-level software such as
+	the emulator (which is what this kludge is for).  Let the emulator create
+	its own client presentation of mach.defs with vm_map() renamed.
+	(If you want to know what a presentation is,
+	read our paper on
+	<a href = "ftp://mancos.cs.utah.edu/papers/presint3.html">
+	Using Annotated Interface Definitions to Optimize RPC</a> .
+	<p>
+
+<li>	<b><a href="coding-style.html">Coding Style Changes</a>:</b>
+	I've "set in motion" a few minor coding style changes
+	in order to make the kernel source code more flexible
+	and easier to work with.
+	<p>
+
+</ul>
+
+<hr>
+</body>
+</html>

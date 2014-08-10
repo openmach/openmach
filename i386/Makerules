@@ -1,0 +1,83 @@
+#
+# Copyright (c) 1994 The University of Utah and
+# the Computer Systems Laboratory (CSL).  All rights reserved.
+#
+# Permission to use, copy, modify and distribute this software and its
+# documentation is hereby granted, provided that both the copyright
+# notice and this permission notice appear in all copies of the
+# software, derivative works or modified versions, and any portions
+# thereof, and that both notices appear in supporting documentation.
+#
+# THE UNIVERSITY OF UTAH AND CSL ALLOW FREE USE OF THIS SOFTWARE IN ITS "AS
+# IS" CONDITION.  THE UNIVERSITY OF UTAH AND CSL DISCLAIM ANY LIABILITY OF
+# ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
+#
+# CSL requests users of this software to return to csl-dist@cs.utah.edu any
+# improvements that they make and grant CSL redistribution rights.
+#
+#      Author: Bryan Ford, University of Utah CSL
+#
+ifndef _mach4_i386_makerules_
+_mach4_i386_makerules_ = yes
+
+# This is the generic GNU makefile for Mach 4 on i386 systems.
+#
+# MSRCDIR must be set to the directory of the i386 source tree.
+
+
+# Get rid.
+DEFINES += -Di386
+
+INCDIRS += $(MSRCDIR)/include
+ifneq ($(NO_LIBMACHSA_INC),yes)
+TARGET_INCDIRS += $(MSRCDIR)/include/mach/sa
+endif
+
+
+
+# Programs
+MKBMOD = $(OBJDIR)/boot/mkbmod
+MKUBMOD = $(OBJDIR)/boot/mkubmod
+export MACHBINDIR = $(OBJDIR)/boot
+export MACHBOOTDIR = $(OBJDIR)/boot
+
+
+# When we need to link a standalone server such as bootstrap,
+# use this as its crt0.o.
+ifndef CRT0
+CRT0 := $(OBJDIR)/libmach/standalone/mach-crt0.o
+endif
+
+
+# Required compiler/assembler flags.
+# Note that we don't have to bother with HOST_anything
+# for assembly language sources:
+# the host probably can't execute i386 assembly language anyway.
+TARGET_ASFLAGS	+= -DASSEMBLER
+
+
+# Assembly language source files.
+# Note that we must use '=' instead of ':=' because FILES isn't complete yet.
+SFILES = $(filter %.S,$(FILES))
+
+# Some stupid uuencoded binary object files are necessary
+# because their source code is proprietary.
+# And of course this means we need different versions for ELF and a.out...
+ifeq ($(ENABLE_ELF),yes)
+BFILE_EXT = b_elf
+else
+BFILE_EXT = b
+endif
+BFILES = $(filter %.$(BFILE_EXT),$(FILES))
+
+GEN_OBJFILES += $(sort $(addsuffix .o,$(basename $(notdir $(SFILES) $(BFILES)))))
+
+
+%.o: %.S 
+	$(TARGET_CC) -c $(CPPFLAGS) $(ASFLAGS) $(TARGET_CPPFLAGS) $(TARGET_ASFLAGS) -MD $<
+
+%.o: %.$(BFILE_EXT)
+	uudecode $<
+
+
+endif

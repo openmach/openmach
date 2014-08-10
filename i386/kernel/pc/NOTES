@@ -1,0 +1,34 @@
+
+
+i16_raw.c:
+	Provides a default implementation
+	of real/pmode switching code.
+	Assumes that, as far as it's concerned,
+	low linear address always map to physical addresses.
+	(The low linear mappings can be changed,
+	but must be changed back before switching back to real mode.)
+
+	Provides:
+		i16_raw_switch_to_pmode()
+		i16_raw_switch_to_real_mode()
+
+		i16_raw_start()
+			Called in real mode.
+			Initializes the pmode switching system,
+			switches to pmode for the first time,
+			and calls the 32-bit function raw_start().
+
+	Depends on:
+
+		paging.h:
+			raw_paging_enable()
+			raw_paging_disable()
+			raw_paging_init()
+
+		a20.h:
+			i16_enable_a20()
+			i16_disable_a20()
+
+		real.h:
+			real_cs
+

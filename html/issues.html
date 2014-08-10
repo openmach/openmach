@@ -1,0 +1,85 @@
+<html>
+<head><title> Unresolved Hacky Issues </title></head>
+<body>
+<h1> Unresolved Hacky Issues </h1>
+<hr>
+
+This page lists a number of issues that still need to be worked out,
+mostly with the build environment.  This is not complete!  Some bigger
+issues---long term issues---aren't even here, and of course
+no research issues are mentioned here.
+Ideas and suggestions on these issues, or additions to this list, are welcome.
+
+<h2>Kernel</h2>
+
+	<b>kernel/chips:</b>
+	I'm not quite sure what to do with the kernel/chips directory.  The i386
+	port only uses chips/busses.c; for now I just put a copy of this file
+	into the i386 source tree and totally left the main chips directory out
+	of the build environment.  This will have to be fixed somehow, obviously.
+	Perhaps since this directory essentially contains a general-purpose
+	"implementation repository" for real device drivers to use, it should be
+	placed into some kind of link library used when linking the kernel.
+	Perhaps the scsi directory should be in that library as well.
+	<p>
+
+<h2>MIG stubs</h2>
+
+	Currently, everywhere MIG is used to produce client stubs for a .defs file,
+	all the client stubs are placed in a single .c file, instead of one .c file
+	for each client stub.  This simplifies the build environment significantly,
+	but means that programs will get client stubs they don't need linked into them,
+	inflating program size.  However, this problem may not really need to be fixed.
+	For one thing, in a more mature Mach-based system down the road, libmach will
+	probably always be used as a shared library, so all the client stubs will have
+	to be present anyway.  Second, the GNU C library may make libmach obsolete,
+	because it contains essentially everything libmach does, and it already knows
+	how to deal with zillions of individual client stub files.  Third, in the
+	new IPC system "on its way", client stubs are way smaller, and many are inlined,
+	so size is no longer much of an issue.  Between these possible eventualities,
+	I'm hoping that at least one will come true and I'll be able to weasel out of
+	this job. :-)
+	<p>
+
+<h2>User-level code:</h2>
+
+	<b>User-level code and headers:</b>
+	Another thing about the current system that I'm not sure I like is that the
+	public cthreads and bootstrap header files are mixed in with the public kernel
+	header files.  For now this isn't too much of a problem, but it might be
+	desirable at some point to take all the optional user-level services such
+	as cthreads, libmach, the bootstrap program, and possibly other personality-
+	independent modules such as name servers and device drivers, and throw them
+	all into a separate package.  (Maybe call it the Flock - "Flock of Low-level
+	OS-independent Common Kludges". :-) )
+	<p>
+
+	<b>Hurd's cthreads and libmach:</b>
+	The Hurd supplies a "slightly frobbed" version of libthreads
+	instead of the one supplied by the Mach distribution;
+	it would be nice if the "standard" libmach could be modified
+	so the Hurd could use it unchanged.
+	<p>
+
+	<b>cthread_inline.awk:</b>
+	Currently mach4-i386/libthreads/cthread_inline.awk is not used.  I need to turn
+	those routines into real GCC inline functions and get rid of the awk script.
+	However, until then this problem should only affect performance.
+	<p>
+
+	<b>NO_TYPE_CHECK_SRCS:</b>
+	In libmach, I didn't include the NO_TYPE_CHECK_SRCS kludge, which would turn off
+	type checking for messages that are "supposed" to come only from the kernel,
+	which is trusted.  This "feature" presumes that libmach knows what its clients are
+	using the Mach interfaces for, which totally violates the microkernel concept.
+	High-level software components can create their own presentations of the
+	standard interfaces with type checking disabled, if they want to.  This change
+	shouldn't cause any compatibility problems, only performance problems on
+	servers that use libmach's default presentations on the assumption that they
+	will be "optimized" in this way.
+	<p>
+
+
+<hr>
+</body>
+</html>

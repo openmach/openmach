@@ -1,0 +1,20 @@
+dnl
+dnl Copyright (c) 1994 The University of Utah and
+dnl the Center for Software Science (CSS).  All rights reserved.
+dnl
+dnl Permission to use, copy, modify and distribute this software and its
+dnl documentation is hereby granted, provided that both the copyright
+dnl notice and this permission notice appear in all copies of the
+dnl software, derivative works or modified versions, and any portions
+dnl thereof, and that both notices appear in supporting documentation.
+dnl
+dnl THE UNIVERSITY OF UTAH AND CSS ALLOW FREE USE OF THIS SOFTWARE IN ITS "AS
+dnl IS" CONDITION.  THE UNIVERSITY OF UTAH AND CSS DISCLAIM ANY LIABILITY OF
+dnl ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
+dnl
+dnl CSS requests users of this software to return to css-dist@cs.utah.edu any
+dnl improvements that they make and grant CSS redistribution rights.
+dnl
+dnl      Author: Bryan Ford, University of Utah CSS
+dnl
+AC_INIT(kernel/i386/locore.S)

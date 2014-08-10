@@ -1,0 +1,664 @@
+
+			Mach 4 distribution
+			    Bryan Ford
+	  University of Utah Computer Systems Laboratory
+
+
+NOTE: This README is out-of-date.  Instead of this, you should read the
+installation instructions in our public WWW pages at:
+http://www.cs.utah.edu/projects/flexmach/mach4-proj.html
+
+
+INTRODUCTION
+~~~~~~~~~~~~
+
+This is a distribution of Mach with a totally new build environment
+and a new microkernel boot system.  (And soon, the new migrating threads-based
+IPC system CSL developed on our PA-RISC version of Mach...)  This i386 release
+is based on Remy Card's version of CMU's MK83, with modifications to the
+server bootstrap code to load servers from a Linux ext2fs.  The microkernel
+now boots directly from LILO as a Linux-like boot image, initializes itself,
+and runs the bootstrap code and Remy's test server.
+
+
+Requirements
+------------
+
+You will need the following programs installed and available in order
+to compile this version of Mach:
+
+	* GNU make.  You can name it whatever you want
+	  (e.g. you can install it as `gmake' if you already
+	  have another version of make that you want to keep).
+	* GNU awk, or another version of awk that has `toupper()'.
+	  If you call it `gawk', it will be used instead of `awk'.
+
+Quick Start
+-----------
+
+The new build environment pretty much follows the standard GNU guidelines.
+To configure the system, unpack the machine-independent and machine-dependent
+source trees (e.g. "mach4" and "mach4-i386") somewhere, create a separate
+object directory to build into, and run the configure script in the
+machine-dependent source tree from within the object directory.  (Currently
+the object directories MUST be SEPARATE FROM the source directories.)  You'll
+have to specify the location of the machine-independent source tree on the
+configure command line with a "--with-mach4=DIR" option.  Finally, type
+`make -r' or `make -r install' to build the kernel and optionally install it.
+(You don't actually have to use `-r', but GNU make runs faster if you do.)
+For example:
+
+tar xvzf /tmp/mach4.tar.gz
+tar xvzf /tmp/mach4-i386.tar.gz
+mkdir obj
+cd obj
+../mach4-i386/configure --with-mach4=../mach4
+make -r install
+
+All installed files will go into directories named relative to the
+prefix you specify on the configure command line, or `/usr/local'
+by default, as per normal GNU conventions.
+
+The sectons below describe in more detail exactly what you get, but to try
+the new kernel and bootstrap code quickly, go into the directory
+$(prefix)/lib/mach-boot, and type `mkbootimage *.bmod'.  (Make sure the
+$(prefix)/bin directory is in your path, if you didn't install Mach into
+/usr/local or /usr or another "standard" place.)  This command should create
+a file called `boot' in the same directory.  This file is an ordinary LILO
+boot image which you can add to your lilo.conf file with an entry that looks
+something like this:
+
+image = <appropriate path>/lib/mach-boot/boot
+	label = mach
+
+You can then run `lilo' to update the boot map, reboot, and try running Mach.
+Of course, if you want to load a server, you'll have to create a /mach_servers
+directory and put a server into it.
+
+
+Cross Compilation
+-----------------
+
+With this build environment you can easly cross compile Mach from a different
+architecture and/or OS.  To cross compile from a different (non-Mach) OS but
+on the same processor architecture, you normally shouldn't have to do anything
+special; the "normal" procedure above is known to work on Linux anyway.
+If you have any problems, try the cross compilation procedure described below.
+
+To cross compile from a different architecture, you will have to have all the
+standard cross-development tools built.  In particular, Mach requires cross
+development versions of gcc, gas, ld, ar, and ranlib.  You can get all these
+from prep.ai.mit.edu:/pub/{gcc-*,gas-*,binutils-*}.  Just build and install
+them as the INSTALL files say to, using the `--target=' option to specify
+the target architecture and OS (e.g. `--target=i386-gnu').  It will probably
+be easiest if you install them in the same place your ordinary compiler is
+located: for example, use `--prefix=/usr' if gcc et al is in /usr/bin.  As
+long as the new tools are configured for cross development, they will not
+overwrite the native tools that are already there, because they are given
+names prefixed with the target specification, e.g. `i386-gnu-gcc'.
+
+Be sure to build and install gas and binutils _before_ GCC.  Even then, GCC may
+fail to compile completely because of missing header files (probably stdio.h).
+If it fails while trying to build libgcc2.a, then you've gotten far enough for
+the purposes of Mach - the compiler has already been built, and you can just
+`make install' at that point and go back to Mach.
+
+To cross compile Mach itself, the only additional thing you need to do is tell
+the Mach build environment where to find the cross compilation tools.  The
+normal GNU way to do this, I understand, is to specify the tools as variable
+overrides on the `make' command line; e.g. `make CC=i386-gnu-gcc LD=...'
+You can do it this way if you want; if you do, you'll need to set the variables
+CC, LD, AR, and RANLIB.
+
+However, with this Mach distribution, there's an easier way.  If you specify
+a --target option on the command line when running Mach's configure script,
+(e.g. `--target=i386-gnu'), then the makefiles will automatically be set up
+with the default names of the development tools it uses prefixed with the
+target name (e.g. `i386-gnu-gcc' etc.).  You can still override those defaults
+on the `make' command line, but it should not be necessary to if your tools
+are named according to the standard conventions and are in your path.
+
+Note that the LILO boot configuration requires an as86 and ld86 to
+assemble. These are available on linux, but I do noy know of any cross
+versions of these programs. (I haven't yet tried to compile them
+anywhere other then linux.) Therefore, if you want your kernel to be
+bootable with LILO, you must find a way to get bootsetup (in mach4-i386/boot)
+assembled and linked. A cross build that does not have the x86 tools
+available will simply fail to make LILO-compatible boot images for you;
+the resulting boot images will still boot from NetBSD or Mach boot blocks
+however.
+
+
+BUILD ENVIRONMENT
+~~~~~~~~~~~~~~~~~
+
+Design Philosophy
+-----------------
+
+In the original Mach source code environment, the general orientation of the
+entire system was toward the machine-independent code being "master" and the
+machine-dependent code being the "slave".  The "main" machine-independent parts
+would generally include or invoke the machine-dependent parts to implement
+machine-dependent aspects of the system.  However, this structure assumes
+that the machine-independent code can always "know" what is really machine-
+dependent and what isn't, which is generally not possible without horrible
+kludging.  Different subsets of the available machine-independent functionality
+often apply to different variants of the microkernel, and this is difficult to
+express if the machine-independent code is trying to make all the decisions.
+
+Therefore, in the new build environment, the roles of the components are
+reversed: the more-specific component is always the "master", and it determines
+which pieces of less-specific functionality to incorporate, and in what way.
+The machine-independent code takes the role of "slave", merely a source code
+repository to pick and choose from, much like a library.  This way, specific
+variants of the system can have complete control over the finished product.
+
+Good microkernels tend to contain a fairly high percentage of machine-dependent
+code, because most of the generic, high-level, machine-independent functionality
+has been moved out to user-level servers.  This percentage is already pretty
+high in Mach, and is probably going to go up even more as the kernel becomes
+more "micro".  For this reason, instead of including the source code for every
+different supported architecture in one big source tree, I'm splitting up the
+Mach sources into smaller "packages".  There is one generic, machine-independent
+package ("mach4"), and at least one machine-specific package for each supported
+architecture ("mach4-i386", "mach4-parisc", etc.).
+
+In keeping with the idea of more-specific code being "master", the actual
+configure scripts and bottom-level makefiles come from the architecture-specific
+source tree; they can use scripts and makefiles from the machine-independent
+source tree as appropriate.  A third, even-more-specific source package "layer"
+could even be used, say for a specific vendor or machine type.  For example,
+if support for the Sequent Symmetry gets added back in, it could be a
+third-level package based on both the mach4 and the mach4-i386 packages.
+
+
+Gory Details
+------------
+
+The configure script is generated from configure.in by autoconf.  It requires
+two new autoconf macros, AC_DIR and AC_SRCDIR, which I've just submitted to
+bug-gnu-utils as a patch to autoconf-1.11.  Hopefully the addition will be
+incorporated by the next release of autoconf.  In the meantime, you can either
+use the configure script I generated, or ask me and I'll send you the patches.
+
+There are two types of makefiles in the source directories: "Makerules" files
+and "Makefile.in" files.  The former are used primarily in generic, machine-
+independent directories, and are meant to be included by other makefiles.
+The latter are templates for "real" makefiles, which will be translated and
+copied into corresponding object directories by the configure script.
+
+The configure script generates one Makefile in the top-level object directory,
+and a Makefile in the object subdirectories for each major system component.
+The top-level Makefile simply runs make recursively on each of the
+subdirectories in the correct order; it does not actually create anything.
+All the other makefiles are independent of each other (there are no other
+recursive make invocations), and do all the real work.
+
+The makefiles are very unlikely to work with anything but GNU make.
+Also, you will probably want to use `make -r' instead of just `make', to
+disable all the built-in implicit rules: it makes builds significantly faster.
+I have `make' permanently aliased to `make -r', and I just use `\make' when
+I'm building something that breaks when the built-in rules are missing.
+
+To compile everything, just type `make' in the top-level object directory
+that you executed the configure script from.  To build only a certain part,
+such as the kernel, go into the appropriate object subdirectory (e.g. `kernel')
+and run make from there.  You shouldn't have to set up any special shell
+variables or anything.  You can say `make <objfile>' for some arbitrary object
+file from within an object directory and get the expected results; `make -n'
+works properly; and so on - in other words, no funny stuff.
+
+Include file dependencies are kept track of automatically, much like in the
+original Mach build environment, except that the work is done by a five-line
+makefile rule (in mach4/Makerules) instead of a 1300-line C program.  Unlike
+in the ODE build environment, the dependency file shouldn't get trashed if you
+happen to ^C a build session at the wrong time.  It should not be significantly
+slower this way either, maybe even faster.
+
+Note that one problem with this automatic dependency tracking is that if you
+rename or delete a header file, but the `depend' file in your object directory
+still refers to it, make will die with an error message saying that it can't
+find that header file and doesn't know how to build it.  The solution is to
+edit the `depend' file and simply remove all references to the old header file.
+(A more brute-force approach that also works is just to `make clean' and start
+again from scratch.)
+
+Ideas and suggestions on how to make the build environment better are welcome.
+(For one thing, does anyone know of a way for a Makefile to disable the
+default rules?)
+
+
+CHANGES TO MACH
+~~~~~~~~~~~~~~~
+
+(See mach4/ChangeLog and mach4-i386/ChangeLog for a brief list of changes.)
+
+
+Potential Incompatibilities
+---------------------------
+
+Some of the changes I made to Mach are not completely transparent - a few can
+potentially affect clients and servers.  For the most part these changes simply
+help to get Mach "out of the way" of other software, and make it more
+general and less Unix-specific (or, at least, less CMU-UX-single-server specific).
+
+* Mach no longer has a global `sys' include directory.  The needed files
+  in it have been moved to the `mach' directory or to private directories.
+  The `sys' directory should be left available for higher-level OS software.
+  (Already the Hurd was having to kludge around its presence;
+  see below about how to compile it with this version of Mach.)
+
+* Mach no longer exports a global `machine' or `i386' include directory
+  (except for the `mach/machine' subdirectory).  Again, these are the domain
+  of higher-level software and should not be touched by Mach.
+
+* The exported directory `mach/machine' is now no longer a symlink; it's
+  a real directory.  There is no longer an `i386' directory (or any other
+  machine-specific subdirectory for that matter).  This makes things a
+  little simpler and cleaner, and is easy since machine-dependent files
+  are in separate source packages.
+
+For the most part these changes shouldn't affect user-level software, since
+they are all to files rarely or never accessed directly by Mach clients.
+
+Another change that might cause incompatibilities is that MACH_IPC_COMPAT
+is now _not_ defined by default.  If it breaks anything, you can turn it on
+by saying `export DEFS=-DMACH_IPC_COMPAT' before running the configure script.
+If this breaks a _lot_ of important old software (_what_ software? :-) ),
+I may turn it back on by default.
+
+I don't support the htg_vm_map kludge in libmach, which has no business
+supporting special obscure presentations for higher-level software such as
+the emulator (which is what this kludge is for).  Let the emulator create
+its own client presentation of mach.defs with vm_map() renamed.
+(I'll explain later what a presentation is. :-) )
+
+
+Problems and Likely Changes
+---------------------------
+
+I'm not quite sure what to do with the kernel/chips directory.  The i386
+port only uses chips/busses.c; for now I just put a copy of this file
+into the i386 source tree and totally left the main chips directory out
+of the build environment.  This will have to be fixed somehow, obviously.
+Perhaps since this directory essentially contains a general-purpose
+"implementation repository" for real device drivers to use, it should be
+placed into some kind of link library used when linking the kernel.
+Perhaps the scsi directory should be in that library as well.
+
+There are also some little files duplicated because they are used by both
+kernel and user code: for example, bcopy and setjmp/longjmp.  I'm not sure
+what to do with these either.  Perhaps they should go into the library
+mentioned above as well, and that library be used for both kernel and user
+code.  Perhaps that library should simply be the existing libmach_sa.a.
+
+Currently mach4-i386/libthreads/cthread_inline.awk is not used.  I need to turn
+those routines into real GCC inline functions and get rid of the awk script.
+However, until then this problem should only affect performance.
+
+Currently, everywhere MIG is used to produce client stubs for a .defs file,
+all the client stubs are placed in a single .c file, instead of one .c file
+for each client stub.  This simplifies the build environment significantly,
+but means that programs will get client stubs they don't need linked into them,
+inflating program size.  However, this problem may not really need to be fixed.
+For one thing, in a more mature Mach-based system down the road, libmach will
+probably always be used as a shared library, so all the client stubs will have
+to be present anyway.  Second, the GNU C library may make libmach obsolete,
+because it contains essentially everything libmach does, and it already knows
+how to deal with zillions of individual client stub files.  Third, in the
+new IPC system "on its way", client stubs are way smaller, and many are inlined,
+so size is no longer much of an issue.  Between these possible eventualities,
+I'm hoping that at least one will come true and I'll be able to weasel out of
+this job. :-)
+
+Another thing about the current system that I'm not sure I like is that the
+public cthreads and bootstrap header files are mixed in with the public kernel
+header files.  For now this isn't too much of a problem, but it might be
+desirable at some point to take all the optional user-level services such
+as cthreads, libmach, the bootstrap program, and possibly other personality-
+independent modules such as name servers and device drivers, and throw them
+all into a separate package.  (Maybe call it the Flock - "Flock of Low-level
+OS-independent Common Kludges". :-) )
+
+In libmach, I didn't include the NO_TYPE_CHECK_SRCS kludge, which would turn off
+type checking for messages that are "supposed" to come only from the kernel,
+which is trusted.  This "feature" presumes that libmach knows what its clients are
+using the Mach interfaces for, which totally violates the microkernel concept.
+High-level software components can create their own presentations of the
+standard interfaces with type checking disabled, if they want to.  This change
+shouldn't cause any compatibility problems, only performance problems on
+servers that use libmach's default presentations on the assumption that they
+will be "optimized" in this way.
+
+
+COMPILING THE HURD WITH MACH4
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The Hurd itself shouldn't be affected by the changes to Mach and its build
+environment, but the GNU C library depends on Mach's directory structure and
+therefore was broken by these changes.  However, the fix is fairly simple.
+First, in Michael Bushnell's Hurd README, where it talks about installing the
+GNU C library, replace FOO with the Mach4 `include' directory instead of the
+`kernel' directory.  Second, apply this small patch to the GNU C library,
+on the file `glibc-<version>/mach/Makefile':
+
+diff -u -r old/mach/Makefile ./mach/Makefile
+--- old/mach/Makefile	Wed Jul  6 19:47:02 1994
++++ ./mach/Makefile	Wed Jul  6 20:10:12 1994
+@@ -77,17 +77,10 @@
+ 
+ # Install all .h and .defs files we find in some of the kernel's source
+ # directories and their subdirectories (in MK82, max one level deep).
+-mach-src-headers := $(wildcard $(foreach dir,mach device mach_debug \
+-					     $(config-machine),\
+-					 $(addprefix $(mach-srcdir)/$(dir)/,\
+-						     *.defs *.h \
+-						     */*.defs */*.h)))
+-# Exclude mach/machine/*.  A symlink will be installed for mach/machine.
++mach-src-headers := $(wildcard $(addprefix $(mach-srcdir)/,*/*.* */*/*.*))
+ # Exclude $(headers) for Mach files we have our own versions of.
+-mach-headers = $(filter-out mach/machine/% $(headers),\
++mach-headers = $(filter-out $(headers),\
+ 			    $(mach-src-headers:$(mach-srcdir)/%=%))
+-# Rename Mach's sys/version.h to mach/version.h.
+-mach-headers := $(patsubst sys/version.h,mach/version.h,$(mach-headers))
+ 
+ # Don't distribute the Mach headers; they are in the Mach distribution.
+ dont_distribute = $(mach-headers)
+@@ -96,16 +89,6 @@
+ $(addprefix $(mach-srcdir)/,$(mach-headers)) : ;
+ install-others += $(addprefix $(includedir)/,$(mach-headers))
+ $(includedir)/%: $(mach-srcdir)/%; $(do-install)
+-
+-# Make symlinks for machine and mach/machine in the include directory.
+-install-others += $(includedir)/mach/machine $(includedir)/machine
+-$(includedir)/mach/machine $(includedir)/machine: $(common-objpfx)config.make
+-	-rm -f $@
+-	cd $(@D); ln -s $(config-machine) $(@F)
+-
+-# Install Mach's <sys/version.h> as <mach/version.h>.
+-install-others += $(includedir)/mach/version.h
+-$(includedir)/mach/version.h: $(mach-srcdir)/sys/version.h; $(do-install)
+ 
+ # Define mach-syscalls and sysno-*.
+ ifndef inhibit_mach_syscalls
+
+This patch may not be enough, because I ran out of disk space before I managed
+to build the entire GNU C library.  For one thing, it may be necessary to tell
+glibc about the additional mach4-i386/include directory somehow...
+
+I'm hoping to find a way to make all these shenanigans unnecessary,
+so Mach and glibc can more cleanly.
+
+
+COMPILING LITES WITH MACH4
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Johannes will be releasing Lites under a new build environment soon,
+designed to work well with this Mach distribution.
+
+
+DIRECTORY STRUCTURE
+~~~~~~~~~~~~~~~~~~~
+
+mach4			Machine-independent source package
+	bootstrap	User-level bootstrap code and default pager.
+			I'm hoping to make this obsolete soon -
+			just load the startup server(s) along with the kernel.
+	include		Global include files to be copied into $(prefix)/include.
+	kernel		Source files for the microkernel itself.
+		bogus	Stub header files that `config' used to produce,
+			which define various configuration symbols.
+			This directory will be eliminated
+			as soon as I implement a better way to handle
+			this kind of configuration.
+		chips	Repository for a bunch of semi-drivers; currently unused.
+		ddb	Kernel debugger code.
+		device	System-independent device code.
+		kern	Miscellaneous kernel code.
+		scsi	Host-adapter-independent SCSI device code.
+		vm	Virtual memory management.
+	libmach		Produces libmach.a, libmach_sa.a, and the default
+			.h files for the public .defs files.
+		standalone
+		unixoid
+			See discussion of libraries below.
+	libthreads	C threads library.
+	mig		Mach Interface Generator program, for compiling .defs
+			files.  Incorporates the bugfixes in the GNU Hurd
+			distribution of MiG.
+
+mach4-i386		i386-specific source package
+	boot		Necessary code and tools for smashing boot images together.
+	bootstrap	i386 part of the traditional bootstrap code.
+	include		i386 public includes to be copied to $(prefix)/include.
+	kernel		i386 source files for the basic microkernel.
+		aux	Contains genassym.c, which produces assym.s,
+			a file describing structure offsets for assembly code.
+		bogus	Same idea as system-independent bogus directory.
+		chips	Contains a copy of mach4/kernel/chips/busses.c, big hack.
+		i386	Code specific to the i386 processor architecture.
+		i386at	Code specific to PCs (ISA bus, PC peripherals, etc.).
+		intel	PMAP code, common to both i386 and i860 processors.
+	libmach		i386 specific Mach library code.
+	libthreads	i386 code for C threads.
+	mig		Contains only a Makefile.in at the moment,
+			since mig currently has no machine-specific files,
+			but this may have to change to support cross-compilation.
+
+Currently, this distribution produces two libraries, libmach.a and
+libmach_sa.a, following CMU's model.  The libmach_sa.a library may be
+used to link a Mach program without any other stuff that normally
+comes with the higher-level OS.  It makes a completely "standalone",
+personality-neutral Mach program and is used for programs like the
+bootstrap server (and Remy Card's test server).  The libmach.a library
+is used to link programs in a Unix-like envronment -- specifically,
+the CMU UX server environment.  It is an unfortunate accident that it
+has a "general purpose" name like "libmach.a", rather than a more
+specific sounding name like "libmach_ux.a".  (As an aside, I tried
+naming it libmach_ux.a in one of my releases, but I put it back to
+libmach.a because it led to too much of a mess).
+
+In CMU's build environment, all of the source files for both versions
+of the library were packed into one big happy directory with an
+enormous makefile to determine what went where.  In the Mach4
+environment, all of the common source files are in libmach; the ones
+specific to libmach_sa.a are in libmach/standalone; and the ones
+specific to libmach.a are in libmach/unixoid, (with i386-specific
+files in mach4-i386/libmach/... and generic files in mach4/libmach/...
+as discussed above).  The makefiles that are installed in the object
+directory are used to produce the two libraries and to install the
+presentation header files that define the intefaces to the various
+services provided by the kernel.  When libmach/Makefile is "made", it
+generates all of the header, client, and server source files for the
+common modules of the library.  When it is "make install"ed, it
+installs the header files in their proper installation directories.
+The makefiles in libmach/unixoid and libmach/standalone may be used to
+compile and install libmach.a and libmach_sa.a respectively. 
+
+The Hurd doesn't need and doesn't want libmach.a.  It really doesn't
+belong in Mach at all; it's just there for historical reasons.  The
+only reason I left it in the current distribution is because I think
+that Johannes Helander's LITES distribution probably still needs it,
+since it's based on CMU's UX server.  However, that is subject to
+change in the future and hopefully, Mach will only have to create
+libmach_sa.a.
+
+INSTALLED FILES
+~~~~~~~~~~~~~~~
+
+All files installed by the build environment
+are placed in directories based on the specified prefix
+(/usr/local by default if you don't specify a prefix).
+Here is a list of the files that get installed,
+and where they go relative to the prefix:
+
+/bin/mig		Mach Interface Generator (shell script front-end)
+/include/*		Public Mach header files.
+/lib/mach-boot/*	Boot modules and other booting-related files.
+/lib/migcom		Executable invoked by the `mig' script.
+
+
+BOOTSTRAP SYSTEM
+~~~~~~~~~~~~~~~~
+
+The new Mach boot mechanism introduces the concept of "boot modules".
+Basically, any number of "boot modules" can be thrown together to create
+a single boot image.  That boot image is what LILO or whatever loads,
+and when the system starts up, all of the boot modules will be already
+in memory and immediately available.  At least one of those modules is the
+microkernel itself; others may be device drivers, other kernel modules,
+user-level servers (e.g. the bootstrap code), etc.  Currently only the
+kernel itself and the single server bootstrap program go into the boot
+image, but that'll probably change soon.  I'd like to be able to get rid
+of the server bootstrap code entirely, and simply embed the appropriate
+server(s) directly into the boot image: for example, the LITES, or the
+basic Hurd administration servers (exec, proc, etc.) and a file server
+for the root filesystem.  Eventually it should be possible (though optional)
+to throw an entire root filesystem snapshot into the boot image, so upon
+startup you can get a Unix shell and a minimal set of utilities without
+depending on the successful initialization of any devices other than
+the console.
+
+The exact structure of a boot module and a boot image is by nature somewhat
+system-dependent.  On the i386, a boot module is a relocatable object file
+created with the `mkbmod' script.  A boot module must contain no external
+references (all externs must be resolved), and usually must have all
+symbols stripped, leaving only relocations to be fixed up.  To facilitate
+debugging of boot modules, _one_ boot module in a boot image may be left
+unstripped; you can tell `mkbmod' to leave a boot module unstripped by giving
+it the `-s' option.  (Note that `-s' on mkbmod has exactly the opposite effect
+as `-s' on `gcc' or `ld'.)
+
+The `mkbmod' program assumes when it creates boot modules that certain
+entry points exist in the object. It links a bootmodule specific
+runtime that calls the routine `mach_bmod_init' at boot
+time. (Actually, the kernel calls this routine by following pointers
+stored in the boot module header.) This init routine returns
+information about the object file that `kernel/kern/bootstrap.c' uses
+to execute the module in a thread.
+
+The `mkubmod' command takes a more conventionally linked program (a
+linked executable) and adds this `mach_bmod_init' routine. This allows
+the kernel to load into an address space some linked executable.
+Once your program is compiled and linked, use mkubmod to embed it
+in a bmod object and you can add it to your larger boot image.
+
+A boot image is simply a set of boot modules glued together with the
+`mkbootimage' script, with some extra header/trailer code linked in with it
+(see mach4-i386/boot/bootimage_*), with all relocations fixed, and with
+a LILO-compatible boot sector and setup program tacked onto the front.
+
+All boot modules created, along with the auxiliary stuff needed to create
+boot images, gets thrown into the directory $(prefix)/lib/mach-boot.
+The idea is that some or all of the boot modules in .../lib/mach-boot
+will be glued together into a single boot image to be placed on the
+root filesystem in `/' or `/boot' or whatever.  The boot modules and
+other files used in constructing boot images don't themselves need
+to be available immediately on bootup, so they can be located in the
+"usual" places, even shared among multiple machines.  Eventually, the
+mach-boot directory will probably contain a whole slew of boot modules
+(e.g. both uniprocessor and SMP kernels, various device drivers, file system
+servers for various file system formats, etc.).  You will then be able to
+type something like `mkbootimage -o /boot/machboot /usr/lib/mach-boot/*.bmod'
+and get a fully functional, generic boot image with "all" the possible
+features and device drivers; or you might include only specific modules
+to get a stripped-down image.
+
+
+COMPILATION OPTIONS
+~~~~~~~~~~~~~~~~~~~
+
+Options settable through configure
+----------------------------------
+
+`--enable-mp' causes multiprocessor-safe kernel boot modules to be built.
+They will only be used if they are included in a boot image and that boot
+image is booted on a supported multiprocessor.
+XX not working yet - waiting for imps implementation
+
+`--enable-debug' defines the symbol DEBUG for compilation of everything.
+If you want to enable debugging for only one module,
+you can add the line `DEFINES += -DDEBUG' to the Makefile
+in the appropriate object directory.
+
+
+Options set when compiling certain modules
+------------------------------------------
+`MULTIPROCESSOR' is defined to 1 (by what?) when compiling a kernel.bmod
+for a multiprocessor (e.g. kernel/imps).
+XX not working yet - waiting for imps implementation
+
+
+Other Options
+-------------
+`PROTECTION' is normally defined to 1 (by what?), but can be turned off if
+the kernel is only going to need to support one protection domain (the
+kernel's).  This is useful for embedded systems or systems that do not have
+protected/virtual memory support.
+XX not working yet - waiting for VM updates
+
+`PAGING' is normally defined to 1 (by what?), but can be turned off
+if only physical (wired) memory will be desu.  Potentially useful for the
+same reasons as above.
+XX not working yet - waiting for VM updates
+
+
+CODING STYLE CHANGES
+~~~~~~~~~~~~~~~~~~~~
+
+While for the most part I'm remaining consistent with CMU's original Mach
+coding style in order to keep the kernel code consistent and readable, there
+are a few changes I'm making that you should probably know about.  Most of these
+changes are currently "in progress", so far appearing only in a few places here
+and there.  At some point I'll probably go through the whole kernel and finish
+making the changes globally, but for now you should at least know what's
+happening, and why.
+
+* I'm using `#include ""' for local includes (e.g. "kern/thread.h"),
+  and `#include <>' for global includes (e.g. <mach/message.h>).
+  This will make the interface/implementation boundaries clearer,
+  and once propagated throughout the system, will make the build
+  environment slightly cleaner as well.
+
+* When creating new private header files, I now include them _without_
+  specifying the directory name - let make and GCC hunt them down.
+  For example, say `#include "foo.h"' instead of `#include "kern/foo.h"'.
+  This will allow more-specific header files to override less-specific files
+  automatically, just like .c files already can.  Separate include file
+  namespaces are pretty much useless in Mach anyway, because their
+  corresponding object files all get thrown into one object directory
+  and therefore have to have unique names.  Having separate .h
+  namespaces but a single .c namespace is just an inconsistency without
+  any real benefit.  In any case, namespace crowding should be less and less
+  of a problem as the microkernel becomes more modular and more "micro".
+
+* The web of cross-includes in the current Mach source is ridiculously huge,
+  and is mostly due to the convention of using typedef'd names for
+  pointers to structures (e.g. `ipc_port_t' instead of `struct ipc_port').
+  I'm working on cutting down the web (and therefore make compiles go faster)
+  by changing pointer references to the `struct' form instead of the `_t' form
+  as needed within header files, so one file doesn't need to include another
+  just because it uses a pointer to another structure.
+
+* No more history lists embedded in each source file.  They just take a
+  huge amount of space and don't provide any more information than a single
+  GNU-style ChangeLog does.  Also they screw up diffs by making files
+  appear to have changed when they really haven't.
+
+* I'm trying to avoid putting any machine-dependent #ifdef's (e.g. #ifdef i386)
+  in machine-independent code.  In the new build environment, where any
+  machine-independent file can be modified or overridden by machine-dependent
+  code, there is really no longer an excuse for machine-dependent #ifdef's.
+  If you need to put machine-dependent #ifdef's in machine-independent code,
+  then that code isn't really machine-independent, is it?
+
+
+EPILOGUE
+~~~~~~~~
+
+Good luck!
+
+				Bryan
+
+Bryan Ford <baford@cs.utah.edu>

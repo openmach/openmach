@@ -1,0 +1,71 @@
+/* 
+ * Mach Operating System
+ * Copyright (c) 1992 Carnegie Mellon University
+ * All Rights Reserved.
+ * 
+ * Permission to use, copy, modify and distribute this software and its
+ * documentation is hereby granted, provided that both the copyright
+ * notice and this permission notice appear in all copies of the
+ * software, derivative works or modified versions, and any portions
+ * thereof, and that both notices appear in supporting documentation.
+ * 
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
+ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
+ * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
+ * 
+ * Carnegie Mellon requests users of this software to return to
+ * 
+ *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
+ *  School of Computer Science
+ *  Carnegie Mellon University
+ *  Pittsburgh PA 15213-3890
+ * 
+ * any improvements or extensions that they make and grant Carnegie Mellon
+ * the rights to redistribute these changes.
+ */
+/*
+ *	File:	mach/machine/machine_types.defs
+ *	Author:	Alessandro Forin
+ *	Date:	7/92
+ *
+ *	Header file for the basic, machine-dependent data types.
+ *	Version for 32 bit architectures.
+ *
+ */
+
+#ifndef	_MACHINE_MACHINE_TYPES_DEFS_
+#define	_MACHINE_MACHINE_TYPES_DEFS_	1
+
+/*
+ * A natural_t is the type for the native
+ * integer type, e.g. 32 or 64 or.. whatever
+ * register size the machine has.  Unsigned, it is
+ * used for entities that might be either
+ * unsigned integers or pointers, and for
+ * type-casting between the two.
+ * For instance, the IPC system represents
+ * a port in user space as an integer and
+ * in kernel space as a pointer.
+ */
+type natural_t = unsigned32;
+
+/*
+ * An integer_t is the signed counterpart
+ * of the natural_t type. Both types are
+ * only supposed to be used to define
+ * other types in a machine-independent
+ * way.
+ */
+type integer_t = int32;
+
+
+#if	MACH_IPC_COMPAT
+/*
+ * For the old IPC interface
+ */
+#define	MSG_TYPE_PORT_NAME	MACH_MSG_TYPE_INTEGER_32
+
+#endif	/* MACH_IPC_COMPAT */
+
+
+#endif	/* _MACHINE_MACHINE_TYPES_DEFS_ */

@@ -1,0 +1,76 @@
+<html>
+<head><title> Coding Style </title></head>
+<body>
+<h1> Coding Style </h1>
+<hr>
+
+While for the most part I'm remaining consistent with CMU's original Mach
+coding style in order to keep the kernel code consistent and readable, there
+are a few changes I'm making that you should probably know about.  Most of these
+changes are currently "in progress", so far appearing only in a few places here
+and there.  At some point I'll probably go through the whole kernel and finish
+making the changes globally, but for now you should at least know what's
+happening, and why.
+
+<ul>
+<li>	<b>#include style</b>
+	I'm using `#include ""' for local includes (e.g. "kern/thread.h"),
+	and `#include <>' for global includes (e.g. <mach/message.h>).
+	This will make the interface/implementation boundaries clearer,
+	and once propagated throughout the system, will make the build
+	environment slightly cleaner as well.
+	<p>
+
+	When creating new <b>local</b> header files,
+	I now include them <b>without</b>
+	specifying the directory name - let make and GCC hunt them down.
+	For example, say `#include "foo.h"' instead of `#include "kern/foo.h"'.
+	This allows more-specific header files to override less-specific files
+	automatically, just like .c files already can.  Separate include file
+	namespaces are pretty much useless in Mach anyway, because their
+	corresponding object files all get thrown into one object directory
+	and therefore have to have unique names.  Having separate .h
+	namespaces but a single .c namespace is just an inconsistency without
+	any real benefit.  In any case, namespace crowding should be less and less
+	of a problem as the microkernel becomes more modular and more "micro".
+	NOTE: this change <b>only</b> applies to <b>local</b> header files:
+	public header files such as <mach/message.h> should still be included
+	by specifying the full directory name.
+	<p>
+
+<li>	<b>Pointer-to-structure types:</b>
+	The web of cross-includes in the current Mach source is ridiculously huge,
+	and is mostly due to the convention of using typedef'd names for
+	pointers to structures (e.g. `ipc_port_t' instead of `struct ipc_port').
+	I'm working on cutting down the web (and therefore make compiles go faster)
+	by changing pointer references to the `struct' form instead of the `_t' form
+	as needed within header files, so one file doesn't need to include another
+	just because it uses a pointer to another structure.
+	<p>
+
+<li>	<b>History lists:</b>
+	No more history lists embedded in each source file.  They just take a
+	huge amount of space and don't really provide any more information than a single
+	GNU-style ChangeLog does.  Also, they make merges more difficult
+	by creating additional spurrious modifications in source files
+	that often tend to conflict.
+	<p>
+
+<li>	<b>#ifdefs are Evil:</b>
+	I'm trying to avoid putting any machine-dependent #ifdef's (e.g. #ifdef i386)
+	in machine-independent code.  In the new build environment, where any
+	machine-independent file can be modified or overridden by machine-dependent
+	code, there is really no longer an excuse for machine-dependent #ifdef's.
+	If you need to put machine-dependent #ifdef's in machine-independent code,
+	then that code isn't really machine-independent, is it?
+	<p>
+</ul>
+
+We'll probably wait to make any major cosmetic changes
+until the UK02-freeze branch becomes obsolete
+and we only have to maintain one branch.
+<p>
+
+<hr>
+</body>
+</html>

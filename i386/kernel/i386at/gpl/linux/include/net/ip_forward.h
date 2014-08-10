@@ -1,0 +1,10 @@
+#ifndef __NET_IP_FORWARD_H
+#define __NET_IP_FORWARD_H
+
+#define IPFWD_FRAGMENT		1
+#define IPFWD_LASTFRAG		2
+#define IPFWD_MASQUERADED	4
+#define IPFWD_MULTICASTING	8
+#define IPFWD_MULTITUNNEL	16
+
+#endif

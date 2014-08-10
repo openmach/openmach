@@ -1,0 +1,120 @@
+/* 
+ * Mach Operating System
+ * Copyright (c) 1991 Carnegie Mellon University
+ * All Rights Reserved.
+ * 
+ * Permission to use, copy, modify and distribute this software and its
+ * documentation is hereby granted, provided that both the copyright
+ * notice and this permission notice appear in all copies of the
+ * software, derivative works or modified versions, and any portions
+ * thereof, and that both notices appear in supporting documentation.
+ * 
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
+ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
+ * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
+ * 
+ * Carnegie Mellon requests users of this software to return to
+ * 
+ *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
+ *  School of Computer Science
+ *  Carnegie Mellon University
+ *  Pittsburgh PA 15213-3890
+ * 
+ * any improvements or extensions that they make and grant Carnegie Mellon
+ * the rights to redistribute these changes.
+ */
+
+subsystem
+#if	KERNEL_USER
+	  KernelUser
+#endif
+#if	KERNEL_SERVER
+	  KernelServer
+#endif
+		       mach_norma 555000;
+#ifdef	KERNEL_USER
+userprefix r_;
+#endif
+
+#include <mach/std_types.defs>
+#include <mach/mach_types.defs>
+
+skip;
+
+/*
+ * Specify a node upon which children tasks will be created.
+ * This call exists only to allow testing with unmodified servers.
+ * Server developers should use norma_task_create instead.
+ */
+routine	task_set_child_node(
+		target_task	: task_t;
+		child_node	: int);
+
+/*
+ * THIS CALL WILL BE ELIMINATED.
+ * Use norma_port_location_hint(,mach_task_self(),) instead.
+ */
+routine norma_node_self(
+		host		: host_t;
+	out	node		: int);
+
+skip;
+
+skip;
+
+skip;
+
+/*
+ * (Used to be called task_create_remote.)
+ * Create a task on the given node, possibly inheriting memory.
+ * Same inheritance semantics as task_create, including inheritance
+ * of initial ports and emulation library.
+ * Setting child_node to node_self forces local task creation.
+ */
+routine norma_task_create(
+		target_task	: task_t;
+		inherit_memory	: boolean_t;
+		child_node	: int;
+	out	child_task	: task_t);
+
+/*
+ * Get a given special port for a given node.
+ * Norma special ports are defined in norma_special_ports.h;
+ * examples include the master device port.
+ * There are a limited number of slots available for system servers.
+ *
+ * XXX MAX_SPECIAL_ID should be defined in norma_special_ports.h,
+ * XXX not just in norma/ipc_special.c!
+ * (MAX_SPECIAL_ID specifies total number of slots available)
+ */
+routine	norma_get_special_port(
+		host_priv	: host_priv_t;
+		node		: int;
+		which		: int;
+	out	port		: mach_port_t);
+
+/*
+ * Set a given special port for a given node.
+ * See norma_get_special_port.
+ */
+routine	norma_set_special_port(
+		host_priv	: host_priv_t;
+		which		: int;
+		port		: mach_port_t);
+
+skip;
+
+skip;
+
+skip;
+
+/*
+ * Return best guess of port's current location.
+ * Guaranteed to be a node where the port once was.
+ * Guaranteed to be accurate if port has never moved.
+ * Can be used to determine residence node for hosts, tasks, threads, etc.
+ */
+routine norma_port_location_hint(
+		task		: task_t;
+		port		: mach_port_t;
+	out	node		: int);

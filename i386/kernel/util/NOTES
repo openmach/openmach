@@ -1,0 +1,35 @@
+
+raw_switch:
+
+	Provides the code to switch between real and protected mode.
+	Switches between the environments "completely":
+	e.g. when switching to protected mode,
+	all the normal protected-mode state for that environment is set up.
+
+raw_pmode:
+
+	i16_raw_enter_pmode()
+		Enters protoected mode from real mode.
+		Does not initialize IDT or TSS or anything else;
+		just gets the system into protected mode
+		with a simple temporary GDT.
+		Returns with interrupts turned off
+		(and they'd better stay off until there's a valid pmode IDT!)
+
+	i16_raw_leave_pmode()
+		Assumes paging is turned off.
+		Returns with interrupts turned off;
+		they can probably be turned back on at any time.
+
+	Depends on:
+		i16_die()
+		A20 enable/disable code (e.g. raw_a20).
+		gdt.h: KERNEL_16_CS, KERNEL_16_DS
+
+
+
+vm_param.h:
+
+	Must export kvtolin(), lintokv()
+
+

@@ -1,0 +1,363 @@
+<title>Linux Device Drivers in Mach UK22</title>
+<body>
+<h1>Linux Device Drivers in Mach UK22</h1>
+</h1>
+<i>March 29, 1996</i>
+<hr>
+<h2><a name="contents">Contents</a></h2>
+<dl>
+<dd><a href="#overview">Overview</a>
+<dd><a href="#changes">Changes to Mach4</a>
+<dd><a href="#drivers">Driver Status</a>
+<dd><a href="#config">Configuring Linux drivers into Mach4</a>
+<dd><a href="#naming">Device Naming</a>
+<dd><a href="#random">Miscellaneous features, bugs, etc.</a>
+</dl>
+
+<hr><h2><a name="overview">Overview</a></h2>
+
+ The Linux device driver emulation code provides the glue that allows
+mostly unmodified Linux device drivers to work within Mach.  Shantanu Goel
+(goel@cs.utah.edu) has continuted his Linux device driver emulation work
+that first appeared in Mach4 UK02p21 to support not only network devices,
+but also block and SCSI host adapters.
+
+<p>
+The original work is described the paper <a 
+href="http://www.usenix.org/publications/library/proceedings/sd96/goel.html">
+``Linux Device Driver Emulation in Mach''</a> by Shantanu Goel and Dan
+Duchamp.  (For non Usenix members, a postscript version of the paper can
+be found at <a href="ftp://mancos.cs.utah.edu/papers/linuxemu.ps.Z">
+ftp://mancos.cs.utah.edu/papers/linuxemu.ps.Z</a>.)
+
+<p>
+The Linux device drivers in Mach have been updated to correspond to release
+1.3.68 of Linux.
+
+<p>
+Be aware that since the drivers are from Linux and the device emulation
+code was developed from Linux source, all of the Linux device emulation
+code is covered by the
+<a href =
+"http://www.cs.utah.edu/csinfo/texinfo/emacs19/emacs_3.html#SEC3">
+GPL</a>.
+<p>
+
+
+<hr><h2><a name="changes">Changes to Mach4</a></h2>
+
+<dl>
+
+<li>On the i386, the routines previously in
+mach4/kernel/device/ds_routines.c are now implemented by
+<code>mach4-i386/kernel/i386at/i386at_ds_routines.c</code>.  In
+effect, the device server is now machine dependent.  This is to allow
+multiple emulations and maximum flexibility in the implementation.
+The old routines are still used to support the native Mach drivers.
+
+<p> <li> The kernel now supports Linux block drivers and Linux SCSI
+host adapters.  Block driver support is currently limited to those
+drivers that use block_read/block_write to service I/O requests.
+Fortunately, most drivers do this.  One important exception is the
+SCSI tape driver which uses its own routines.
+
+<p> For more information about block driver support, take a look at:
+
+<p><code>mach4-i386/kernel/i386at/gpl/linux/linux_block.c</code>.  
+
+<a name = "pci"></a>
+
+<p> <li> The linux PCI support code is now included in the kernel,
+although it is only used by the linux device drivers.  Because of
+this, PCI network drivers are now supported, along with PCI block and
+SCSI devices. <p>
+
+<p> <li> Linux network driver support code has been mostly rewritten since
+the last release.  This support can be found in:
+
+<p><code>mach4-i386/kernel/i386at/gpl/linux/linux_net.c</code>.
+
+</dl>
+
+<hr><h2><a name="drivers">Driver Status</a></h2>
+
+The drivers that we have tested are:
+<p>
+
+Network:
+
+<dl>
+<dd>	Various Novell NE2000 clones
+<dd>	HP PCLAN/Plus
+<dd>	SMC Etherpower 10/100 (PCI)
+</dl>
+
+SCSI host adapters:
+
+<dl>
+<dd>	Adaptec 1542CF and 1542CP (with Plug and Play turned off)
+<dd>	Adaptec 2940 (PCI)
+<dd>	Adaptec 2740AT (EISA)
+<dd>	NCR 810 and 825 (PCI)
+<dd>	Ultrastor 34F (Local Bus)
+</dl>
+
+Block:
+
+<dl>
+<dd>	IDE disk/CDROM (with trition chipset, regular IDE)
+<dd>	Floppy
+<dd>	SCSI disk 
+<dd>	SCSI CDROM 
+</dl>
+
+To configure drivers for your kernel, you'll have to edit
+<code>mach4-i386/kernel/i386at/gpl/linux/include/linux/autoconf.h</code>
+to #define the driver you want, or #undef those that you don't.
+<p>
+You cannot specify which drivers will be included in your kernel.
+By default any file with a .c extension will be compiled and included.
+This is a deficiency of the build process.  If you want to get a smaller
+kernel, you'll either have to rename those drivers that you don't want, or
+remove them.  Make sure that any drivers that you remove are #undef'ed in
+<code>autoconf.h</code>.
+<p>
+Since we have only been able to test a small fraction of these drivers,
+please send reports about success/failure to
+<code>mach4-users@cs.utah.edu</code>!
+<p>
+
+<b>Network Drivers</b> 32 Total
+<p>
+
+<pre>
+CONFIG_AC3200		Ansel Communications AC3200 (EISA)
+CONFIG_APRICOT		Apricot 82596
+CONFIG_AT1500		Allied Telesis AT1500 and HP J2405A
+CONFIG_AT1700		Allied Telesis AT1700
+CONFIG_ATP		RealTek (aka AT-Lan-Tec) pocket ethernet adapter
+CONFIG_DE4X5		DEC DE425, DE434, DE435, DE500 and
+			  others using the DEC 21040, 21041, 21140 chips.
+CONFIG_DE600		D-Link DE-600
+CONFIG_DE620		D-Link DE-620
+CONFIG_DEPCA		DEPCA and EtherWORKS (DEPCA, DE100, DE101, DE200 Turbo
+			  DE201 Turbo, DE202 Turbo, DE210, DE422)
+CONFIG_E2100		Cabletron E2100
+CONFIG_EEXPRESS		Intel EtherExpress
+CONFIG_EEXPRESS_PRO	Intel EtherExpress Pro/10
+CONFIG_EL1		3Com Etherlink 3c501 
+CONFIG_EL2		3Com Etherlink II/16 3c503
+CONFIG_ELPLUS		3Com Etherlink Plus 3c505 
+CONFIG_EL16		3Com Etherlink 16 3c507 
+CONFIG_EL3		3Com Etherlink III 3c509 
+CONFIG_ETH16I		ICL EtherTeam 16i and 32 EISA
+CONFIG_EWRK3		DEC EtherWORKS 3 (DE203 Turbo, DE204 Turbo, 
+			DE205 Turbo)
+CONFIG_HP100		HP HP10/100VG ANYLAN (HP J2577, HP J2573, HP 27248B,
+			  HP J2577, HP J2573, HP J2585)
+CONFIG_HPLAN		HP PCLAN
+CONFIG_HPLAN_PLUS	HP PCLAN/plus
+CONFIG_NE2000		NE1000, NE2000
+CONFIG_NI52		NI5210 (i82586 Ethernet chip)
+CONFIG_NI65		ni6510 (am7990 'lance' chip)
+CONFIG_SEEQ8005		SEEQ 8005 based boards
+CONFIG_SK_G16		Schneider & Koch (SK) G16
+CONFIG_ULTRA		SMC Ultra and SMC EtherEZ (shared memory only)
+CONFIG_VORTEX		3Com Etherlink III (PCI) 3c590, 3c595-Tx 
+CONFIG_WAVELAN		AT&T GIS WaveLAN (Intel 82586)
+CONFIG_WD80x3		WD80x3 (WD8003 and WD8013 "compatible" ethercards)
+CONFIG_ZNOTE		Zenith Z-Note (i82593)
+</pre>
+
+<b>SCSI Host Adapters</b> 22 Total
+
+<pre>
+CONFIG_SCSI_NCR53C7xxx		NCR53c810/815/820/825/700/710/720 
+CONFIG_SCSI_AM53C974		AM53/79C974 (PCscsi)
+CONFIG_SCSI_BUSLOGIC		Buslogic Adapters (see below)
+CONFIG_SCSI_GENERIC_NCR5380	NCR 5380 and NR53c400
+CONFIG_SCSI_NCR53C406A		NCR53c406a
+CONFIG_SCSI_ADVANSYS		AdvanSys SCSI Adapters
+CONFIG_SCSI_AHA152X		Adaptec 152x cards
+CONFIG_SCSI_AHA1542		Adaptec 154x cards
+CONFIG_SCSI_AHA1740		Adaptec 174x cards
+CONFIG_SCSI_AIC7XXX		Adaptec 274x, 284x, 294x, 3940, 3985 boards
+CONFIG_SCSI_EATA		EATA/DMA SCSI host adapter
+CONFIG_SCSI_EATA_DMA		DPT PM2011B/9X, PM2021A/9X, PM2012A,
+				  PM2012B, PM2022A/9X, PM2122A/9X,
+				  PM2322A/9X
+CONFIG_SCSI_EATA_PIO		All EATA-PIO baords
+CONFIG_SCSI_FUTURE_DOMAIN	Future Domain TMC-1660/1680 TMC-1650/1670,
+				  and TMC-3260 
+CONFIG_SCSI_IN2000		IN-2000
+CONFIG_SCSI_PAS16		Pro Audio Spectrum/Studio 16
+CONFIG_SCSI_QLOGIC		Qlogic boards
+CONFIG_SCSI_SEAGATE		ST01/ST02, Future Domain TMC-885, TMC-950
+CONFIG_SCSI_T128		Trantor T128/T128F/T228
+CONFIG_SCSI_U14_34F		UltraStor 14F/34F
+CONFIG_SCSI_ULTRASTOR		UltraStor 14F, 24F, and 34F
+CONFIG_SCSI_7000FASST		WD7000-FASST2, WD7000-ASC, WD7000-AX,
+				WD7000-MX, WD7000-EX
+
+Buslogic Adapters supported by the Buslogic driver:
+
+BusLogic "C" Series Host Adapters:
+     BT-946C/956C/956CD/747C/757C/757CD/445C/545C/540CF
+BusLogic "S" Series Host Adapters:
+     BT-747S/747D/757S/757D/445S/545S/542D
+     BT-542B/742A (revision H)
+BusLogic "A" Series Host Adapters:
+     BT-542B/742A (revision G and below)
+AMI FastDisk VLB/EISA BusLogic Clone Host Adapter
+</pre>
+
+<b>Special Configuration</b>
+<pre>
+CONFIG_BLK_DEV_CMD640		CMD Technologies 0640 IDE interface chip
+CONFIG_BLK_DEV_RZ1000		Support for RZ1000 IDE chipset
+CONFIG_BLK_DEV_TRITON		Intel PCI Triton chipset (82371FB)
+</pre>
+
+
+
+<hr><h2><a name="config">Configuation</a></h2>
+
+To enable Linux devices, add <code>--enable-linuxdev</code> to your mach4
+configure line.<p>
+
+  This will enable <b>ALL</b> Linux devices.  Basically this
+means that you can either use the native Mach devices, or the Linux
+devices.  Generally this won't be too much of a problem, since there
+are so many more devices supported by the Linux device code.
+
+<p> By default, all linux devices are configured into the kernel.  You'll
+probably want to remove the drivers that you aren't using, since the
+kernels tend to be rather large this way.  To change which drivers that
+will be compiled into the kernel, you should do this:
+
+<dl>
+<li> Edit
+<code>mach4-i386/kernel/i386at/gpl/linux/include/linux/autoconf.h</code>
+and add the appropriate #define for the driver (to figure out
+which #define goes with which driver, you'll probably have to do a
+little searching around).  <p>
+
+<li> If the driver is for a block device and there isn't a name
+translation for it already, you'll have to add an entry for it in
+name_to_major[] in
+<code>mach4-i386/kernel/i386at/gpl/linux/linux_block.c</code>
+
+<p> <li> If you want more than 2 network interfaces in your, you will have
+to edit <code>mach4-i386/kernel/i386at/gpl/linux/net/Space.c</code>.
+
+
+<p> <li> Recompile the kernel and reboot.
+</dl>
+
+<hr><h2><a name="naming">Device Naming</a></h2>
+
+<dl>
+<li> SCSI devices are named independent of their SCSI bus ID and are
+assigned device numbers in the order that they are probed.  For example,
+If you have one host adapter in the machine and a disk with ID 1 and
+a CDROM with ID 3, the disk will be named "sd0", and the CDROM "cd0".
+This is unlike native Mach SCSI drivers, where device unit numbers
+correspond to their SCSI bus IDs (ie. a disk with ID 5 would be sd5).
+
+<p> <li> IDE CDROMs are name "wcd0", "wcd1", etc.  Because IDE CD-ROM
+support is handled by the IDE device driver, the device number depends on
+where it is installed in the system.  For example, if it is the slave
+device on the 2nd IDE controller, it will be named "wcd3".  Likewise, if
+it was the master device, it would be "wcd2".  This is in contrast to
+FreeBSD which names IDE CDROMs irrepective of where they reside.
+
+<p> <li> Ethernet devices are named "eth0", "eth1", etc.  This is analogous
+to the way Linux names them.  
+</dl>
+
+
+<hr><h2><a name="random">Miscellaneous features, bugs, etc.</a></h2>
+
+<dl>
+<p><b>Features</b><p>
+
+<li> Unlike the Mach drivers, when using Linux block drivers, arbitrary
+length read/write requests are supported.
+
+<li> There is no 16 MB memory limit since the Linux drivers support bounce
+buffers.
+
+<li> The network drivers are named "eth0", "eth1", etc. as in Linux when
+using Linux drivers.  This is unlike the previous version of the Linux
+device driver code.
+
+<li> PCI devices are now supported through the use of the Linux PCI
+configuration code.
+
+<p><b>Bugs</b><p>
+
+<li> You cannot specify which drivers will be compiled into your kernel.
+By default any file with a .c extension will be compiled and included with
+your kernel.  If you want to get a smaller kernel, you'll either have to
+rename those drivers that you don't want, or remove them.
+
+<li> Presently Linux and native drivers cannot be mixed.  Specifying
+<code>--enable-linuxdev</code> when you configure mach4 causes both Linux
+network and block drivers to be used.  Ideally, there would be separate
+options for each so that Mach network and Linux block drivers can be
+mixed.
+
+<li> Linux block driver emulation is not complete due to the requirement
+that drivers use block_read/block_write (some drivers misbehave in this
+respect, most notably the scsi tape driver).
+
+<li> Linux character and sound drivers are not supported.
+
+<li> The Linux driver support is not MP safe.
+
+<li> Linux driver ioctls are presently not supported.  To do this properly will
+require addition of a `device_ioctl' call similar to Unix to the Mach device
+interface.
+
+<li> The standalone (proprietary interface) CDROM drivers have not been
+tested (since we don't have any) though they should work since Linux
+treats them as block devices.  You'll have to add a name translation for
+them in <code>mach4-i386/kernel/i386at/gpl/linux/linux_block.c</code> if
+you want to try them out.
+
+<li> No partitioning (disklabel, etc.) ioctls are supported by the Linux
+emulation.  To initialize a disk, you will have to use *BSDs.  Disklabels
+are, however, read and understood by the kernel.  </dl>
+
+<p><b> Configuration Issues. </b> <p>
+
+<li> The Linux driver for the SMC Etherpower network card is
+<code>mach4-i386/kernel/i386at/gpl/linux/net/de4x5.c</code>.  If you
+have a real DEC board you will need to #undef IS_NOT_DEC at line 254.
+
+<li> To make the generic NCR5380 driver compile, I have #define'd
+CONFIG_SCSI_G_NCR5380_MEM in
+<code>mach4-i386/kernel/i386at/gpl/linux/scsi/g_NCR5380.c</code>, line 65.
+You'll have to change it if your board is I/O mapped.
+
+<li> The hp100 driver uses I/O mapped I/O since Mach does not currently support
+the Linux vremap() function.  Look in
+<code>mach4-i386/kernel/i386at/gpl/linux/net/hp100.c</code>.
+
+<p>
+
+<hr>
+<address><a href="http://www.cs.utah.edu/~sclawson/">Stephen Clawson</a>
+&lt;<a
+href="mailto:sclawson@cs.utah.edu">sclawson@cs.utah.edu</a>&gt;<br></address>
+<address><a href="http://www.cs.utah.edu/~goel/">Shantanu Goel</a>
+&lt;<a
+href="mailto:goel@cs.utah.edu">goel@cs.utah.edu</a>&gt;<br></address>
+March 29, 1996
+</body>
+
+<!-- Local Variables: -->
+<!-- mode: indented-text -->
+<!-- left-margin: 0 -->
+<!-- fill-column: 74 -->
+<!-- End: -->

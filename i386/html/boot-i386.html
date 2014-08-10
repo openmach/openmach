@@ -1,0 +1,94 @@
+<html>
+<head><title>Bootstrap System for i386</title></head>
+<body>
+<h1>Bootstrap System for i386</h1>
+<hr>
+
+<b>Boot modules:</b>
+The new Mach boot mechanism introduces the concept of "boot modules".
+Basically, any number of "boot modules" can be thrown together to create
+a single boot image.  That boot image is what LILO or whatever loads,
+and when the system starts up, all of the boot modules will be already
+in memory and immediately available.  At least one of those modules is the
+microkernel itself; others may be device drivers, other kernel modules,
+user-level servers (e.g. the bootstrap code), etc.  Currently only the
+kernel itself and the single server bootstrap program go into the boot
+image, but that'll probably change soon.  I'd like to be able to get rid
+of the server bootstrap code entirely, and simply embed the appropriate
+server(s) directly into the boot image: for example, the LITES, or the
+basic Hurd administration servers (exec, proc, etc.) and a file server
+for the root filesystem.  Eventually it should be possible (though optional)
+to throw an entire root filesystem snapshot into the boot image, so upon
+startup you can get a Unix shell and a minimal set of utilities without
+depending on the successful initialization of any devices other than
+the console.
+<p>
+
+The exact structure of a boot module and a boot image is by nature somewhat
+system-dependent.  On the i386, a boot module is a relocatable object file
+created with the `mkbmod' script.  A boot module must contain no external
+references (all externs must be resolved), and usually must have all
+symbols stripped, leaving only relocations to be fixed up.  To facilitate
+debugging of boot modules, _one_ boot module in a boot image may be left
+unstripped; you can tell `mkbmod' to leave a boot module unstripped by giving
+it the `-no-strip' option.
+<p>
+
+<b>Creating boot modules:</b>
+The `mkbmod' program assumes when it creates boot modules that certain
+entry points exist in the object. It links a bootmodule specific
+runtime that calls the routine `mach_bmod_init' at boot
+time. (Actually, the kernel calls this routine by following pointers
+stored in the boot module header.) This init routine returns
+information about the object file that `kernel/kern/bootstrap.c' uses
+to execute the module in a thread.
+<p>
+
+<b>Encapsulating user-level programs in boot modules:</b>
+The `mkubmod' command takes a more conventionally linked program (a
+linked executable) and adds this `mach_bmod_init' routine to it. This allows
+the kernel to load some arbitrary linked executable into a user-level Mach task
+and start it running before any personality servers are available.
+The executable you give to `mkubmod' can be in any of the standard i386 a.out
+variants that Mach understands, including:
+
+<ul>
+<li>	CMU Mach/UX ZMAGIC
+<li>	NetBSD ZMAGIC
+<li>	Linux ZMAGIC
+<li>	FreeBSD QMAGIC
+</ul>
+
+Once your program is compiled and linked, use mkubmod to embed it in a
+bmod object and you can add it to your larger boot image.
+<p>
+
+<b>Boot images:</b>
+A boot image is simply a set of boot modules glued together with the
+`mkbootimage' script, with some extra header/trailer code linked in with it
+(see mach4-i386/boot/bootimage_*), with all relocations fixed, and with
+a LILO-compatible boot sector and setup program tacked onto the front.
+<p>
+
+<b>Boot module installation:</b>
+All boot modules created, along with the auxiliary stuff needed to create
+boot images, gets thrown into the directory <prefix>/lib/mach-boot.
+The idea is that some or all of the boot modules in .../lib/mach-boot
+will be glued together into a single boot image to be placed on the
+root filesystem in `/' or `/boot' or whatever.  The boot modules and
+other files used in constructing boot images don't themselves need
+to be available immediately on bootup, so they can be located in the
+"usual" places, even shared among multiple machines.  Eventually, the
+mach-boot directory will probably contain a whole slew of boot modules
+(e.g. both uniprocessor and SMP kernels, various device drivers, file system
+servers for various file system formats, etc.).  You will then be able to
+type something like `mkbootimage -o /boot/machboot /usr/lib/mach-boot/*.bmod'
+and get a fully functional, generic boot image with "all" the possible
+features and device drivers; or you might include only specific modules
+to get a stripped-down image.
+<p>
+
+
+<hr>
+</body>
+</html>

@@ -1,0 +1,73 @@
+/* 
+ * Mach Operating System
+ * Copyright (c) 1991,1990 Carnegie Mellon University
+ * All Rights Reserved.
+ * 
+ * Permission to use, copy, modify and distribute this software and its
+ * documentation is hereby granted, provided that both the copyright
+ * notice and this permission notice appear in all copies of the
+ * software, derivative works or modified versions, and any portions
+ * thereof, and that both notices appear in supporting documentation.
+ * 
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS 
+ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
+ * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
+ * 
+ * Carnegie Mellon requests users of this software to return to
+ * 
+ *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
+ *  School of Computer Science
+ *  Carnegie Mellon University
+ *  Pittsburgh PA 15213-3890
+ * 
+ * any improvements or extensions that they make and grant Carnegie the
+ * rights to redistribute these changes.
+ */
+
+#ifndef	_MACHID_TYPES_DEFS_
+#define _MACHID_TYPES_DEFS_
+
+#include <mach/mach_types.defs>
+
+type mach_id_t = unsigned;
+type mach_type_t = unsigned;
+
+type mhost_t = mach_id_t;
+type mhost_priv_t = mach_id_t;
+
+type mdefault_pager_t = mach_id_t;
+
+type mprocessor_t = mach_id_t;
+type mprocessor_array_t = array[] of mprocessor_t;
+
+type mprocessor_set_t = mach_id_t;
+type mprocessor_set_array_t = array[] of mprocessor_set_t;
+type mprocessor_set_name_t = mach_id_t;
+type mprocessor_set_name_array_t = array[] of mprocessor_set_name_t;
+
+type mtask_t = mach_id_t;
+type mtask_array_t = array[] of mtask_t;
+
+type mthread_t = mach_id_t;
+type mthread_array_t = array[] of mthread_t;
+
+type mobject_t = mach_id_t;
+type mobject_control_t = mach_id_t;
+type mobject_name_t = mach_id_t;
+
+type mips_thread_state_t = struct[34] of unsigned;
+type sun3_thread_state_t = struct[47] of unsigned;
+type sparc_thread_state_t = struct[73] of unsigned;
+type vax_thread_state_t = struct[17] of unsigned;
+type i386_thread_state_t = struct[17] of unsigned;
+type alpha_thread_state_t = struct[32] of natural_t;
+type parisc_thread_state_t = struct[128] of natural_t;
+
+type vm_region_t = struct[8] of natural_t;
+
+type unix_pid_t = int;
+type unix_command_t = array[*:1024] of char;
+
+import <servers/machid_types.h>;
+
+#endif	_MACHID_TYPES_DEFS_

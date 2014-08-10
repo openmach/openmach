@@ -1,0 +1,89 @@
+#
+# Copyright (c) 1994 The University of Utah and
+# the Computer Systems Laboratory (CSL).  All rights reserved.
+#
+# Permission to use, copy, modify and distribute this software and its
+# documentation is hereby granted, provided that both the copyright
+# notice and this permission notice appear in all copies of the
+# software, derivative works or modified versions, and any portions
+# thereof, and that both notices appear in supporting documentation.
+#
+# THE UNIVERSITY OF UTAH AND CSL ALLOW FREE USE OF THIS SOFTWARE IN ITS "AS
+# IS" CONDITION.  THE UNIVERSITY OF UTAH AND CSL DISCLAIM ANY LIABILITY OF
+# ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
+#
+# CSL requests users of this software to return to csl-dist@cs.utah.edu any
+# improvements that they make and grant CSL redistribution rights.
+#
+#      Author: Bryan Ford, University of Utah CSL
+#
+ifndef _mach4_i386_boot_linux_makerules_
+_mach4_i386_boot_linux_makerules_ = yes
+
+
+TARGETS = mklinuximage linuxboot
+INSTALL_TARGETS = $(INSTALL_BINDIR)/mklinuximage $(INSTALL_BOOTDIR)/linuxboot
+
+CLEAN_FILES += $(TARGETS)
+
+# Having DEBUG defined does bad things for some of this code.
+DEFINES := $(filter-out -DDEBUG=1,$(DEFINES))
+
+# Defines to control the gunzip code
+DEFINES += -DHAVE_STRING_H -DDYN_ALLOC -Dnear=""
+
+# Old defines that I hope to phase out
+DEFINES += -DMACH_KERNEL -DKERNEL
+
+
+SRCDIRS += $(addprefix $(MSRCDIR)/,	\
+		boot/linux		\
+		boot			\
+		kernel/pc/i16		\
+		kernel/pc		\
+		kernel/util/i16		\
+		kernel/util		\
+		kernel/bogus)		\
+	   $(GSRCDIR)/kernel/util
+
+all: $(TARGETS)
+
+%: %.sh
+	sed -e 's,@MACHLIBDIR@,$(INSTALL_LIBDIR),g' \
+	    -e 's,@MACHBOOTDIR@,$(INSTALL_BOOTDIR),g' \
+		$< >$@.tmp && chmod +x $@.tmp && mv -f $@.tmp $@
+
+# XXX should be able to include pc/Makerules
+i16_real_int.o: pc_asm.h
+
+# Include the i386-specific and generic rules files.
+include $(MSRCDIR)/Makerules
+include $(GSRCDIR)/Makerules
+
+
+# Make sure the boot sector and setup header come first.
+OBJFILES := i16_bootsect.o i16_setup.o $(filter-out i16_bootsect.o i16_setup.o,$(OBJFILES))
+
+linuxboot: $(OBJFILES)
+	$(LD) $(LDFLAGS) $(TARGET_LDFLAGS) \
+		-Ttext 0 -oformat binary -o $@ $(OBJFILES) -lmach_c
+
+# For debugging - something you can 'nm' and 'gdb'.
+linuxboot.aout: $(OBJFILES)
+	$(LD) $(LDFLAGS) $(TARGET_LDFLAGS) \
+		-r -o $@ $(OBJFILES) -lmach_sa
+
+
+# Install a standard Mach kernel boot image in Linux format.
+BMODS = $(INSTALL_BOOTDIR)/kernel $(INSTALL_BOOTDIR)/bootstrap
+
+install: $(INSTALL_TARGETS) $(INSTALL_BOOTDIR)/zMach
+
+export MACHBINDIR = $(INSTALL_BINDIR)
+export MACHBOOTDIR = $(INSTALL_BOOTDIR)
+
+$(INSTALL_BOOTDIR)/zMach: $(INSTALL_TARGETS) $(BMODS)
+	$(INSTALL_BINDIR)/mklinuximage -o $@ $(BMODS)
+
+
+endif

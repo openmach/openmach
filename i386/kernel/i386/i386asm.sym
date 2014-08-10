@@ -1,0 +1,139 @@
+/* 
+ * Mach Operating System
+ * Copyright (c) 1991,1990 Carnegie Mellon University
+ * Copyright (c) 1991 IBM Corporation 
+ * All Rights Reserved.
+ * 
+ * Permission to use, copy, modify and distribute this software and its
+ * documentation is hereby granted, provided that both the copyright
+ * notice and this permission notice appear in all copies of the
+ * software, derivative works or modified versions, and any portions
+ * thereof, and that both notices appear in supporting documentation,
+ * and that the name IBM not be used in advertising or publicity 
+ * pertaining to distribution of the software without specific, written
+ * prior permission.
+ * 
+ * CARNEGIE MELLON AND IBM ALLOW FREE USE OF THIS SOFTWARE IN ITS "AS IS"
+ * CONDITION.  CARNEGIE MELLON AND IBM DISCLAIM ANY LIABILITY OF ANY KIND FOR
+ * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
+ * 
+ * Carnegie Mellon requests users of this software to return to
+ * 
+ *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
+ *  School of Computer Science
+ *  Carnegie Mellon University
+ *  Pittsburgh PA 15213-3890
+ * 
+ * any improvements or extensions that they make and grant Carnegie Mellon
+ * the rights to redistribute these changes.
+ */
+
+#include <platforms.h>
+#include <cpus.h>
+#include <mach_kdb.h>
+#include <stat_time.h>
+
+/*
+ * Pass field offsets to assembly code.
+ */
+#include <sys/reboot.h>
+
+#include <kern/thread.h>
+#include <kern/task.h>
+#include <kern/syscall_emulation.h>
+#include <i386/thread.h>
+#include <i386/pmap.h>
+#include "vm_param.h"
+#include "seg.h"
+#include "tss.h"
+#include "idt.h"
+#include "gdt.h"
+#include "ldt.h"
+#include "mp_desc.h"
+
+
+offset	thread			th	pcb
+offset	thread			th	task
+offset	thread			th	recover
+offset	thread			th	kernel_stack
+offset	thread			th	swap_func
+
+offset	task			task	eml_dispatch	TASK_EMUL
+
+offset	eml_dispatch		eml	disp_min	DISP_MIN
+offset	eml_dispatch		eml	disp_count	DISP_COUNT
+offset	eml_dispatch		eml	disp_vector	DISP_VECTOR
+
+expr	&STACK_IKS(0)->k_ebx				KSS_EBX
+expr	&STACK_IKS(0)->k_esp				KSS_ESP
+expr	&STACK_IKS(0)->k_ebp				KSS_EBP
+expr	&STACK_IKS(0)->k_esi				KSS_ESI
+expr	&STACK_IKS(0)->k_edi				KSS_EDI
+expr	&STACK_IKS(0)->k_eip				KSS_EIP
+size	i386_kernel_state	iks
+
+size	i386_exception_link	iel
+
+offset	i386_saved_state	r	cs
+offset	i386_saved_state	r	uesp
+offset	i386_saved_state	r	eax
+offset	i386_saved_state	r	trapno
+offset	i386_saved_state	r	err
+offset	i386_saved_state	r	efl		R_EFLAGS
+offset	i386_saved_state	r	eip
+offset	i386_saved_state	r	cr2
+
+offset	i386_interrupt_state	i	eip
+offset	i386_interrupt_state	i	cs
+offset	i386_interrupt_state	i	efl
+
+offset	i386_tss		tss	esp0
+offset	i386_tss		tss	ss0
+
+expr	I386_PGBYTES					NBPG
+expr	VM_MIN_ADDRESS
+expr	VM_MAX_ADDRESS
+expr	VM_MIN_KERNEL_ADDRESS				KERNELBASE
+expr	KERNEL_STACK_SIZE
+
+expr	PDESHIFT
+expr	PTESHIFT
+expr	PTEMASK
+
+expr	INTEL_PTE_PFN					PTE_PFN
+expr	INTEL_PTE_VALID					PTE_V
+expr	INTEL_PTE_WRITE					PTE_W
+expr	~INTEL_PTE_VALID				PTE_INVALID
+expr	NPTES						PTES_PER_PAGE
+expr	INTEL_PTE_VALID|INTEL_PTE_WRITE			INTEL_PTE_KERNEL
+
+expr	IDTSZ
+expr	GDTSZ
+expr	LDTSZ
+
+expr	KERNEL_CS
+expr	KERNEL_DS
+expr	KERNEL_TSS
+expr	KERNEL_LDT
+
+expr	(VM_MIN_KERNEL_ADDRESS>>PDESHIFT)*sizeof(pt_entry_t)	KERNELBASEPDE
+
+#if	MACH_KDB
+expr	RB_KDB
+#endif	MACH_KDB
+
+#if	NCPUS > 1
+offset	mp_desc_table		mp	gdt
+offset	mp_desc_table		mp	idt
+#endif	NCPUS > 1
+expr	INTSTACK_SIZE
+
+#if	!STAT_TIME
+offset	timer			tm	low_bits	LOW_BITS
+offset	timer			tm	high_bits	HIGH_BITS
+offset	timer			tm	high_bits_check	HIGH_BITS_CHECK
+expr	TIMER_HIGH_UNIT
+offset	thread			th	system_timer
+offset	thread			th	user_timer
+#endif
+

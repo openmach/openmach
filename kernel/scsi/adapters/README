@@ -1,0 +1,290 @@
+
+This directory contains various examples of HBA support code,
+among them:
+
+ Chip/Board	File		Machine tested		By
+
+ NCR 53C94	scsi_53C94	DecStation 5000		af@cmu
+ DEC 7061	scsi_7061	DecStation 3100/2100	af@cmu
+ NCR 5380	scsi_5380	VaxStation 3100		af@cmu
+ Fujitsu 89352	scsi_89352	Omron Luna88k		danner@cmu
+ Adaptec 1542B	scsi_aha15	AT/PC			af@cmu
+
+It should be trivial to modify them for some other machine that uses
+the same SCSI chips, hopefully by properly conditionalizing and macroizing
+the existing code.
+
+There are various rules and assumptions to keep in mind when designing/coding
+the support code for a new HBA, here is a list.  Pls extend this with
+anything you find is not openly stated here and made your life miserable
+during the port, and send it back to CMU.
+
+
+AUTOCONF
+
+We assume the structures and procedures defined in chips/busses.*,
+e.g. someone will call configure_bus_master to get to our foo_probe()
+routine.  This should make up its mind on how many targets it sees
+[see later for dynamic reconfig], allocate a descriptor for each
+one and leave the driver ready to accept commands (via foo_go()).
+
+	On raw chips you should use a test_unit_ready command,
+	selecting without ATN, and timing out on non-existant
+	devices. Use LUN 0.
+	On boards, there probably is a command to let the board do
+	it (see Adaptec), if not do as above.
+
+The typical autoconf descriptor might look like
+
+	caddr_t	foo_std[NFOO] = { 0 };
+	struct	bus_device *foo_dinfo[NFOO*8];
+	struct	bus_ctlr *foo_minfo[NFOO];
+	struct	bus_driver foo_driver = 
+	        { foo_probe, scsi_slave, scsi_attach, foo_go, foo_std, "rz",
+		  foo_dinfo,  "foo", foo_minfo, BUS_INTR_B4_PROBE};
+
+which indicates that foo_probe() and foo_go() are our interface functions,
+and we use the generic scsi_slave() and scsi_attach() for the rest.
+Their definition is
+
+	foo_probe(reg, ui)
+		vm_offset_t	reg;
+		struct bus_ctlr	*ui;
+
+[the "reg" argument might actually be something else on architectures that
+ do not use memory mapped I/O]
+
+	aha_go(tgt, cmd_count, in_count, cmd_only)
+		target_info_t		*tgt;
+		boolean_t		cmd_only;
+
+The foo_go() routine is fairly common across chips, look at any example to
+see how to structure it.  Basically, the arguments tell us how much data
+to expect in either direction, and whether (cmd_only) we think we should
+be selecting with ATN (cmd_only==FALSE) or not.  The only gotcha is cmd_count
+actually includes the size of any parameters.
+
+The "go" field of the scsi_softc structure describing your HBA should be
+set to your foo_go() routine, by the foo_probe() routine.
+
+DATA DEPENDENCIES
+
+The upper layer assumes that tgt->cmd_ptr is a pointer to good memory
+[e.g. no funny padding] where it places the scsi command control blocks
+AND small (less than 255 bytes) parameters.  It also expects small results
+in there (things like read_capacity, for instance).  I think I cleaned
+up all the places that used to assume tgt->cmd_ptr was aligned, but do not
+be surprised if I missed one.
+
+It does NOT use the dma_ptr, or any of the transient_state fields.
+
+WATCHDOG
+
+There is an optional MI watchdog facility, which can be used quite simply by
+filling in the "watchdog" field of the scsi_softc structure describing
+your HBA.  To disable it, leave the field zero (or, dynamically, zero the
+timeout value).  You can use a watchdog of your own if you like, or more
+likely set this field to point to the MI scsi_watchdog().
+This requires that your foo_softc descriptor starts off with a watchdog_t
+structure, with the "reset" field pointing to a function that will
+reset the SCSI bus should the watchdog expire.
+
+When a new SCSI command is initiated you should 
+	if (foo->wd.nactive++ == 0)
+		foo->wd.watchdog_state = SCSI_WD_ACTIVE;
+to activate the watchdog, on each interrupt [or other signal that all
+is proceeding well for the command and it is making progress] you should
+	if (foo->wd.nactive)
+		foo->wd.watchdog_state = SCSI_WD_ACTIVE;
+bump down the watchdog 'trigger level', and when the command terminates
+	if (aha->wd.nactive-- == 1)
+		aha->wd.watchdog_state = SCSI_WD_INACTIVE;
+
+When you detect a SCSI bus reset (possibly we initiated it) you should
+	aha->wd.nactive = 0;
+and after cleaning up properly invoke
+	scsi_bus_was_reset(sc)
+		scsi_softc_t	sc;
+
+The functiona that is invoked on watchdog expiry is
+	foo_reset_scsibus(foo)
+		register foo_softc_t	foo;
+
+Note that this can be used for dumb chips that do not support select timeouts
+in hardware [see the 5380 or 7061 code], but its primary use is to detect
+instances where a target is holding on the SCSI bus way too long.
+
+The one drawback of resetting the bus is that some devices (like tapes)
+lose status in case of a reset, and the MI code does not (yet?) try to
+keep enough information around to be able to recover.  If you want to
+add something very useful you might change the rz_tape.c code to do just
+that, e.g. on SCSI_RET_ABORTs wait a while for the tape to do whatever,
+then rewind, and seek forward where the tape should have been positioned at
+the beginning of the command that failed, then reissue the command.
+None of the examples so far tries to be 'smart' like making an attempt
+to get the bus unstuck without resetting it, send us ideas if you have
+some.
+
+
+DYNAMIC RECONFIG
+
+Your code should be ready to add/remove targets on the fly.  To do so,
+notify the upper layer that a target went offline returning
+SCSI_RET_DEVICE_DOWN when e.g. the select timed out, and clear out
+the tgt->flags field.
+To find new devices, define a function
+
+	boolean_t
+	foo_probe_target(tgt, ior)
+		target_info_t		*tgt;
+		io_req_t		ior;
+
+and install it in the "probe" field of the scsi_softc_t structure describing
+the HBA to the upper layer.  This function should finalize all HBA-specific
+info in the target_info structure, then do a scsi_inquiry and check the
+return code.  If this is not SCSI_RET_DEVICE_DOWN the target should be
+marked TGT_ALIVE.
+
+
+COMMAND TERMINATION
+
+Generally, command termination should be reported to the upper layers
+by setting the tgt->done field to the proper value [it should remain
+SCSI_RET_IN_PROGRESS while the command is executing] and invoking the
+target's completion routine, like:
+	if (tgt->ior) {
+		LOG(0xA,"ops->restart");
+		(*tgt->dev_ops->restart)( tgt, TRUE);
+	}
+Note that early on some commands will actually wait for completion
+by spinning on the tgt->done value, because autoconf happens when
+threads and the scheduler are not working.
+
+Return SCSI_RET_RETRY if the target was busy, the command will be retried
+as appropriate.
+
+Check the completion routines [in rz_disk.c and rz_tape.c for instance]
+if you are not sure what to return in a troubled case.
+
+HBA CHIPS GOTCHAS
+
+All of the examples so far use the idea of 'scripts': the interrupt routine
+matches the chip state with what is expected and if this is ok (it is
+in the common important case) it just calls a prepackaged function.
+We have found this to be _extremely_ simpler than using a state machine
+of various ridiculous and erroneous sorts, and much more handy for debugging
+also. Not to mention the saving on code.
+Nonetheless, there really are no restrictions on how to structure the HBA
+code, if you prefer state machines go ahead and use them!
+
+Scheduling of the bus among competing targets is one of the major missing
+pieces for simple HBAs.  A winning strategy used so far is as follows.
+Allocate a queue_head_t of waiting_targets in your foo_softc, and two
+target_info_t pointers next_target and active_target. A three-valued
+state field is also needed.  If you enter the foo_go() routine
+and find the state&BUSY simply enqueue_tail() your tgt on the waiting_targets
+queue.  Otherwise mark the bus BUSY, set next_target to tgt, and proceed
+to a selection attempt.
+Note that the attempt might fail and a reselection win over it, therefore
+the attempt_selection() routine should just retrieve the next_target
+and install it in active_target, start the selection and let the interrupt
+routine take care of the rest [see scsi_5380 for a different setup].
+If a reselection wins we should note that we had a COLLISION in the state
+field, install the reconecting target and proceed to completion.
+When either a command is complete or a target disconnects you should invoke
+a foo_release_bus() routine, which might look like:
+
+boolean_t
+foo_release_bus(foo)
+	register foo_softc_t	foo;
+{
+	boolean_t	ret = TRUE;
+
+	LOG(9,"release");
+	if (foo->state & FOO_STATE_COLLISION) {
+
+		LOG(0xB,"collided");
+		foo->state &= ~FOO_STATE_COLLISION;
+		foo_attempt_selection(foo);
+
+	} else if (queue_empty(&foo->waiting_targets)) {
+
+		foo->state &= ~FOO_STATE_BUSY;
+		foo->active_target = 0;
+		foo->script = 0;
+		ret = FALSE;
+
+	} else {
+
+		LOG(0xC,"dequeue");
+		foo->next_target = (target_info_t *)
+				dequeue_head(&foo->waiting_targets);
+		foo_attempt_selection(foo);
+	}
+	return ret;
+}
+
+which indicates whether the bus has been handed off to a new target or not.
+This provides the desired FIFO scheduling of the bus and gives maximum
+parallelism when targets are allowed to (and infact do) disconnect.
+
+An area where there are problems most times is how to minimize the
+interaction of selections and reselections in, e.g. foo_attempt_selection().
+This is very much chip specific, but sneaking on the SCSI bus should
+be a viable alternative in most cases.  Check in the specs what happens
+if you send a command while there is already a reselection pending:
+a well behaved chip would ignore the command and not screwup its status.
+[Keep in mind that even if _now_ there is no reselection indication
+ on the next cycle there might be and you won't see it!]
+
+RANDOM GOTCHAS
+
+A number of workstations do not provide real DMA support [do not ask me why]
+but rather a special 'buffer' more or less wide where you have to copy
+data to and from.  This has been handled, see esp the 52C94 code which has
+even the extreme optimization of issuing the send command even before
+the data has been copied into the buffer!   We have handled even machines
+where no DMA at all was provided.
+
+Speaking of DMA.. many of these chips 'prefetch' data, or have a FIFO
+on board (they have to if they do synch xfers), and when the target
+disconnects it is always a pain to find out how many bytes exactly did we
+xfer. Be advised that this hurdle exists, and that the best way to
+debug your code here is to use a tape.  A safe way is to initially
+disable disconnects [so that you can get the system up from disk]
+and enable them only on the tape unit that you are using for testing.
+Later on enable disks but make sure you have some way to recover from
+a zapped disk !
+
+MOVING TO USER SPACE
+
+All examples have hooks for user-space versions of the driver, the
+ones for 54C94 and 7061 actually do work.  Look in mapped_scsi.c
+for how this is done, it is fairly simple as far as the kernel is 
+concerned.  To keep the option of mapping to user space open you 
+should structure your interrupt routine such that it does all the
+state gathering and clearing of the interrupt right away.  This
+scheme gives you some assurance that your code will keep on working
+when the interrupt processing is actually delayed and you recover
+the interrupt state from the saved structure in the mapped area.
+
+
+IMPROVEMENTS
+
+There are a variety of things to be done still, for instance:
+
+- rewrite scsi_slave() and scsi_attach() to be fully SCSI-II compliant.
+  There are only comments right now as to how that should be done.
+
+- add enough machinery to the tape code to be able to recover from
+  bus resets.  Do so in such a way that other devices might use the ideas.
+
+- add more devices, like printers scanners modems etc that are currently
+  missing
+
+- add a 'generic' set_status flavor which simply executes a scsi command
+  passed in from user.  This seems the way many vendors and other people
+  have strutured their drivers, it would make it possible to have a common
+  user-level program to do special maintainance work like, for instance,
+  reformatting of disks.
+

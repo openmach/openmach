@@ -1,0 +1,121 @@
+/* 
+ * Mach Operating System
+ * Copyright (c) 1991,1990,1989,1988,1987 Carnegie Mellon University
+ * All Rights Reserved.
+ * 
+ * Permission to use, copy, modify and distribute this software and its
+ * documentation is hereby granted, provided that both the copyright
+ * notice and this permission notice appear in all copies of the
+ * software, derivative works or modified versions, and any portions
+ * thereof, and that both notices appear in supporting documentation.
+ * 
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
+ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
+ * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
+ * 
+ * Carnegie Mellon requests users of this software to return to
+ * 
+ *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
+ *  School of Computer Science
+ *  Carnegie Mellon University
+ *  Pittsburgh PA 15213-3890
+ * 
+ * any improvements or extensions that they make and grant Carnegie Mellon
+ * the rights to redistribute these changes.
+ */
+/*
+ * File:	mach/memory_object_default.defs
+ *
+ * Abstract:
+ *	Mach external memory management interface declaration; subset
+ *	that is applicable to managers of kernel-created memory objects.
+ */
+
+subsystem
+#if	KERNEL_USER
+	  KernelUser
+#endif	KERNEL_USER
+		     memory_object_default 2250;
+
+#ifdef	MACH_KERNEL
+#include <norma_vm.h>
+#if	NORMA_VM
+userprefix k_;
+#endif	NORMA_VM
+#endif	MACH_KERNEL
+
+#include <mach/std_types.defs>
+#include <mach/mach_types.defs>
+
+#if	SEQNOS
+serverprefix seqnos_;
+serverdemux seqnos_memory_object_default_server;
+#endif	SEQNOS
+
+/*
+ *	Pass on responsibility for the new kernel-created memory
+ *	object.  The port on which this request is that port
+ *	(possibly a memory object itself) registered as the "default
+ *	pager".  Other arguments are as described for memory_object_init.
+ *	[No reply required.]
+ */
+simpleroutine	memory_object_create(
+		old_memory_object	: memory_object_t =
+						MACH_MSG_TYPE_MOVE_SEND
+						ctype: mach_port_t;
+#if	SEQNOS
+	msgseqno seqno			: mach_port_seqno_t;
+#endif	SEQNOS
+		new_memory_object	: memory_object_t =
+						MACH_MSG_TYPE_MOVE_RECEIVE
+						ctype: mach_port_t
+#if	KERNEL_USER
+		/* for compatibility with Mach 2.5 kernels */
+						, dealloc
+#endif	KERNEL_USER
+						;
+		new_object_size		: vm_size_t;
+		new_control_port	: memory_object_control_t =
+						MACH_MSG_TYPE_MAKE_SEND
+						ctype: mach_port_t;
+		new_name		: memory_object_name_t =
+						MACH_MSG_TYPE_MAKE_SEND
+						ctype: mach_port_t;
+		new_page_size		: vm_size_t);
+
+/*
+ *	Provide initial data contents for this region of
+ *	the memory object.  If data has already been written
+ *	to the object, this value must be discarded; otherwise,
+ *	this call acts identically to memory_object_data_write.
+ */
+simpleroutine	memory_object_data_initialize(
+		memory_object		: memory_object_t;
+#if	SEQNOS
+	msgseqno seqno			: mach_port_seqno_t;
+#endif	SEQNOS
+		memory_control_port	: memory_object_control_t =
+						MACH_MSG_TYPE_MAKE_SEND
+						ctype: mach_port_t;
+		offset			: vm_offset_t;
+		data			: pointer_t);
+
+#if	0
+/*
+ *	Indicate that the specified range of data in this memory object
+ *	will not be requested again until it is reinitialized with
+ *	memory_object_data_write or memory_object_data_initialize.
+ */
+simpleroutine	memory_object_data_terminate(
+		memory_object		: memory_object_t;
+#if	SEQNOS
+	msgseqno seqno			: mach_port_seqno_t;
+#endif	SEQNOS
+		memory_control_port	: memory_object_control_t =
+						MACH_MSG_TYPE_MAKE_SEND
+						ctype: mach_port_t;
+		offset			: vm_offset_t;
+		size			: vm_size_t);
+#else	0
+skip;	/* memory_object_data_terminate */
+#endif	0

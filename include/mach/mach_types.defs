@@ -1,0 +1,249 @@
+/*
+ * Mach Operating System
+ * Copyright (c) 1994-1988 Carnegie Mellon University.
+ * Copyright (c) 1993,1994 The University of Utah and
+ * the Computer Systems Laboratory (CSL).
+ * All rights reserved.
+ *
+ * Permission to use, copy, modify and distribute this software and its
+ * documentation is hereby granted, provided that both the copyright
+ * notice and this permission notice appear in all copies of the
+ * software, derivative works or modified versions, and any portions
+ * thereof, and that both notices appear in supporting documentation.
+ *
+ * CARNEGIE MELLON, THE UNIVERSITY OF UTAH AND CSL ALLOW FREE USE OF
+ * THIS SOFTWARE IN ITS "AS IS" CONDITION, AND DISCLAIM ANY LIABILITY
+ * OF ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF
+ * THIS SOFTWARE.
+ *
+ * Carnegie Mellon requests users of this software to return to
+ *
+ *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
+ *  School of Computer Science
+ *  Carnegie Mellon University
+ *  Pittsburgh PA 15213-3890
+ *
+ * any improvements or extensions that they make and grant Carnegie Mellon
+ * the rights to redistribute these changes.
+ */
+/*
+ *	Mach kernel interface type declarations
+ */
+
+#ifndef	_MACH_MACH_TYPES_DEFS_
+#define _MACH_MACH_TYPES_DEFS_
+
+/*
+ *	For KernelServer and KernelUser interfaces, Mig will
+ *	automagically use ipc_port_t instead of mach_port_t
+ *	on the kernel side of the interface.  For example,
+ *	convert_task_to_port really returns ipc_port_t.
+ *	Doing this in Mig saves many explicit conditional
+ *	cusertype/cservertype declarations.
+ *
+ *	Mig doesn't translate the components of an array.
+ *	For example, Mig won't use the thread_t translations
+ *	to translate a thread_array_t argument.
+ */
+
+#include <mach/std_types.defs>
+#if	KERNEL_SERVER
+#include <norma_vm.h>
+#endif	/* KERNEL_SERVER */
+
+type mach_port_status_t = struct[9] of integer_t;
+
+type old_mach_port_status_t = struct[8] of integer_t;	/* compatibility */
+
+type task_t = mach_port_t
+		ctype: mach_port_t
+#if	KERNEL_SERVER
+		intran: task_t convert_port_to_task(mach_port_t)
+		outtran: mach_port_t convert_task_to_port(task_t)
+		destructor: task_deallocate(task_t)
+#endif	/* KERNEL_SERVER */
+		;
+
+#ifdef	MIGRATING_THREADS
+#if	KERNEL
+/* What the conventional external Mach interfaces see as a thread_t
+   is really an act_t within the kernel.  */
+#define thread_t act_t
+#define convert_port_to_thread convert_port_to_act
+#define convert_thread_to_port convert_act_to_port
+#define thread_deallocate act_deallocate
+#endif	/* KERNEL */
+#endif	/* MIGRATING_THREADS */
+
+type thread_t = mach_port_t
+		ctype: mach_port_t
+#if	KERNEL_SERVER
+		intran: thread_t convert_port_to_thread(mach_port_t)
+		outtran: mach_port_t convert_thread_to_port(thread_t)
+		destructor: thread_deallocate(thread_t)
+#endif	/* KERNEL_SERVER */
+		;
+
+type thread_state_t		= array[*:1024] of natural_t;
+
+type task_array_t = ^array[] of task_t;
+type thread_array_t = ^array[] of thread_t;
+
+type vm_task_t = mach_port_t
+		ctype: mach_port_t
+#if	KERNEL_SERVER
+		intran: vm_map_t convert_port_to_map(mach_port_t)
+		destructor: vm_map_deallocate(vm_map_t)
+#endif	/* KERNEL_SERVER */
+		;
+
+type ipc_space_t = mach_port_t
+		ctype: mach_port_t
+#if	KERNEL_SERVER
+		intran: ipc_space_t convert_port_to_space(mach_port_t)
+		destructor: space_deallocate(ipc_space_t)
+#endif	/* KERNEL_SERVER */
+		;
+
+type vm_address_t = natural_t;
+type vm_offset_t = natural_t;
+type vm_size_t = natural_t;
+type vm_prot_t = int;
+type vm_inherit_t = int;
+type vm_statistics_data_t = struct[13] of integer_t;
+type vm_machine_attribute_t = int;
+type vm_machine_attribute_val_t = int;
+
+type thread_info_t		= array[*:1024] of natural_t;
+type thread_basic_info_data_t	= struct[11] of integer_t;
+type thread_sched_info_data_t	= struct[7] of integer_t;
+
+type task_info_t		= array[*:1024] of natural_t;
+type task_basic_info_data_t	= struct[8] of integer_t;
+type task_events_info		= struct[7] of natural_t;
+type task_thread_times_info_data_t = struct[4] of integer_t;
+
+
+type memory_object_t = mach_port_t
+		ctype: mach_port_t
+#if	KERNEL_SERVER
+		intran: ipc_port_t null_conversion(mach_port_t)
+#endif	/* KERNEL_SERVER */
+		;
+
+type memory_object_control_t = mach_port_t
+		ctype: mach_port_t
+#if	KERNEL_SERVER
+#if	NORMA_VM
+		intran: mach_xmm_obj_t xmm_kobj_lookup(mach_port_t)
+#else	/* NORMA_VM */
+		intran: vm_object_t vm_object_lookup(mach_port_t)
+#endif	/* NORMA_VM */
+#endif	/* KERNEL_SERVER */
+		;
+
+type memory_object_name_t = mach_port_t
+		ctype: mach_port_t
+#if	KERNEL_SERVER
+		intran: vm_object_t vm_object_lookup_name(mach_port_t)
+		destructor: vm_object_deallocate(vm_object_t)
+#endif	/* KERNEL_SERVER */
+		;
+
+type memory_object_copy_strategy_t = int;
+type memory_object_return_t = int;
+
+type machine_info_data_t = struct[5] of integer_t;
+type machine_slot_data_t = struct[8] of integer_t;
+
+type host_t = mach_port_t
+		ctype: mach_port_t
+#if	KERNEL_SERVER
+		intran: host_t convert_port_to_host(mach_port_t)
+		outtran: mach_port_t convert_host_to_port(host_t)
+#endif	/* KERNEL_SERVER */
+		;
+
+type host_priv_t = mach_port_t
+		ctype: mach_port_t
+#if	KERNEL_SERVER
+		intran: host_t convert_port_to_host_priv(mach_port_t)
+#endif	/* KERNEL_SERVER */
+		;
+
+type host_info_t 			= array[*:1024] of natural_t;
+type host_basic_info_data_t		= struct[5] of integer_t;
+type host_sched_info_data_t		= struct[2] of integer_t;
+type host_load_info_data_t		= struct[6] of integer_t;
+
+
+type processor_t = mach_port_t
+		ctype: mach_port_t
+#if	KERNEL_SERVER
+		intran: processor_t convert_port_to_processor(mach_port_t)
+		outtran: mach_port_t convert_processor_to_port(processor_t)
+#endif	/* KERNEL_SERVER */
+		;
+
+type processor_array_t 		= ^array[] of processor_t;
+type processor_info_t		= array[*:1024] of natural_t;
+type processor_basic_info_data_t = struct[5] of integer_t;
+
+
+type processor_set_t = mach_port_t
+		ctype: mach_port_t
+#if	KERNEL_SERVER
+		intran: processor_set_t convert_port_to_pset(mach_port_t)
+		outtran: mach_port_t convert_pset_to_port(processor_set_t)
+		destructor: pset_deallocate(processor_set_t)
+#endif	/* KERNEL_SERVER */
+		;
+
+type processor_set_array_t = ^array[] of processor_set_t;
+
+type processor_set_name_t = mach_port_t
+		ctype: mach_port_t
+#if	KERNEL_SERVER
+		intran: processor_set_t convert_port_to_pset_name(mach_port_t)
+		outtran: mach_port_t convert_pset_name_to_port(processor_set_t)
+		destructor: pset_deallocate(processor_set_t)
+#endif	/* KERNEL_SERVER */
+		;
+
+type processor_set_name_array_t = ^array[] of processor_set_name_t;
+
+type processor_set_info_t	= array[*:1024] of natural_t;	
+type processor_set_basic_info_data_t = struct[5] of integer_t;
+type processor_set_sched_info_data_t = struct[2] of integer_t;
+
+
+type kernel_version_t		= (MACH_MSG_TYPE_STRING, 512*8);
+
+type kernel_boot_info_t		= (MACH_MSG_TYPE_STRING, 4096*8);
+
+type time_value_t		= struct[2] of integer_t;
+
+type emulation_vector_t		= ^array[] of vm_offset_t;
+
+type xxx_emulation_vector_t	= array[*:1024] of vm_offset_t
+					ctype: emulation_vector_t;
+					/* XXX compatibility */
+
+type rpc_signature_info_t	= array[*:1024] of int;
+
+#if	KERNEL_SERVER
+simport <kern/ipc_kobject.h>;	/* for null conversion */
+simport <kern/ipc_tt.h>;	/* for task/thread conversion */
+simport <kern/ipc_host.h>;	/* for host/processor/pset conversions */
+simport <kern/task.h>;		/* for task_t */
+simport <kern/thread.h>;	/* for thread_t */
+simport <kern/host.h>;		/* for host_t */
+simport <kern/processor.h>;	/* for processor_t, processor_set_t */
+simport <vm/vm_object.h>;	/* for vm_object_t */
+simport <vm/vm_map.h>;		/* for vm_map_t */
+simport <ipc/ipc_space.h>;	/* for ipc_space_t */
+#endif	/* KERNEL_SERVER */
+
+import <mach/mach_types.h>;
+
+#endif	/* _MACH_MACH_TYPES_DEFS_ */

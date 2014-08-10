@@ -1,0 +1,1 @@
+#define NEVC 0

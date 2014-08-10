@@ -1,0 +1,127 @@
+/* 
+ * Mach Operating System
+ * Copyright (c) 1991,1990 Carnegie Mellon University
+ * All Rights Reserved.
+ * 
+ * Permission to use, copy, modify and distribute this software and its
+ * documentation is hereby granted, provided that both the copyright
+ * notice and this permission notice appear in all copies of the
+ * software, derivative works or modified versions, and any portions
+ * thereof, and that both notices appear in supporting documentation.
+ * 
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS 
+ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
+ * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
+ * 
+ * Carnegie Mellon requests users of this software to return to
+ * 
+ *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
+ *  School of Computer Science
+ *  Carnegie Mellon University
+ *  Pittsburgh PA 15213-3890
+ * 
+ * any improvements or extensions that they make and grant Carnegie the
+ * rights to redistribute these changes.
+ */
+
+subsystem machid_debug 2398925;
+
+userprefix machid_;
+serverprefix do_;
+
+#include <mach/std_types.defs>
+#include <mach/mach_types.defs>
+#include <mach_debug/mach_debug_types.defs>
+#include <servers/machid_types.defs>
+
+routine port_get_srights(
+		server		: mach_port_t;
+		auth		: mach_port_t;
+		task		: mtask_t;
+		name		: mach_port_name_t;
+	out	srights		: mach_port_rights_t);
+
+routine port_space_info(
+		server		: mach_port_t;
+		auth		: mach_port_t;
+		task		: mtask_t;
+	out	info		: ipc_info_space_t;
+	out	table_info	: ipc_info_name_array_t,
+					CountInOut, Dealloc;
+	out	tree_info	: ipc_info_tree_name_array_t,
+					CountInOut, Dealloc);
+
+routine port_dnrequest_info(
+		server		: mach_port_t;
+		auth		: mach_port_t;
+		task		: mtask_t;
+		name		: mach_port_name_t;
+	out	total		: unsigned;
+	out	used		: unsigned);
+
+skip;	/* vm_region_info */
+
+routine host_stack_usage(
+		server		: mach_port_t;
+		auth		: mach_port_t;
+		host		: mhost_t;
+	out	reserved	: vm_size_t;
+	out	total		: unsigned;
+	out	space		: vm_size_t;
+	out	resident	: vm_size_t;
+	out	maxusage	: vm_size_t;
+	out	maxstack	: vm_offset_t);
+
+routine processor_set_stack_usage(
+		server		: mach_port_t;
+		auth		: mach_port_t;
+		pset		: mprocessor_set_t;
+	out	total		: unsigned;
+	out	space		: vm_size_t;
+	out	resident	: vm_size_t;
+	out	maxusage	: vm_size_t;
+	out	maxstack	: vm_offset_t);
+
+routine host_zone_info(
+		server		: mach_port_t;
+		auth		: mach_port_t;
+		host		: mhost_t;
+	out	names		: zone_name_array_t,
+					CountInOut, Dealloc;
+	out	info		: zone_info_array_t,
+					CountInOut, Dealloc);
+
+routine port_kernel_object(
+		server		: mach_port_t;
+		auth		: mach_port_t;
+		task		: mtask_t;
+		name		: mach_port_name_t;
+	out	object_type	: unsigned;
+	out	object_addr	: vm_offset_t);
+
+routine mach_kernel_object(
+		server		: mach_port_t;
+		auth		: mach_port_t;
+		id		: mach_id_t;
+	out	object_type	: mach_type_t;
+	out	object_addr	: vm_offset_t);
+
+routine vm_region_info(
+		server		: mach_port_t;
+		auth		: mach_port_t;
+		task		: mtask_t;
+		addr		: vm_offset_t;
+	out	region		: vm_region_info_t);
+
+routine vm_object_info(
+		server		: mach_port_t;
+		auth		: mach_port_t;
+		object		: mobject_name_t;
+	out	info		: vm_object_info_t);
+
+routine vm_object_pages(
+		server		: mach_port_t;
+		auth		: mach_port_t;
+		object		: mobject_name_t;
+	out	pages		: vm_page_info_array_t,
+					CountInOut, Dealloc);

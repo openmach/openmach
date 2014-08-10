@@ -1,0 +1,50 @@
+
+			List-based Memory Manager (LMM)
+			~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This is a flexible memory allocation/management module
+designed along the lines of the Amiga's low level memory management system.
+It differs from typical Unix malloc packages
+in that it does not assume a Unix-like virtual memory environment,
+where the heap comes in one big contiguous region that can be expanded arbitrarily on demand,
+and where memory can be "wasted" freely because untouched pages are never paged in.
+As such it is intended primarily for use in OS kernels and other system-level software.
+
+The LMM has the following main features:
+
+*	Very efficient use of memory.
+	At most fourteen bytes are wasted in a given allocation
+	(because of alignment restrictions);
+	there is _no_ memory overhead for 8-byte aligned allocations.
+
+*	Support for allocating memory with specific alignment properties.
+	Memory can be allocated at any given power-of-two boundary,
+	or at an arbitrary offset beyond a specified power-of-two boundary.
+
+*	Support for allocations that must come from a specific address range.
+	For example, sometimes memory needs to be allocated specifically
+	from the first 16MB of physical memory, or from the first 1MB of memory.
+
+Its (potential) disadvantages are:
+
+*	It requires the caller to remember the size of each allocated block,
+	and pass its size back as a parameter to lmm_free().
+	Thus, a malloc() implemented on top of this memory manager
+	would have to remember the size of each block somewhere.
+
+*	Since it uses a sequential search through what amounts to a single linked list,
+	allocations are not as blazingly fast
+	as in packages that maintain separate free lists for different sizes of blocks.
+
+*	It does not know how to "grow" the free list automatically
+	(e.g. by calling sbrk() or some equivalent);
+	if it runs out of memory, the allocation simply fails.
+
+*	It is not thread-safe - i.e. it does not contain any internal serialization code.
+
+If high-speed conventional memory allocation is needed,
+conventional zone allocation techniques can be implemented on top of the LMM.
+
+
+XXX make an "LMM pool" an ADT so there can be more than one in a program?
+

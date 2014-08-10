@@ -1,0 +1,81 @@
+/* 
+ * Mach Operating System
+ * Copyright (c) 1991,1990,1989 Carnegie Mellon University
+ * All Rights Reserved.
+ * 
+ * Permission to use, copy, modify and distribute this software and its
+ * documentation is hereby granted, provided that both the copyright
+ * notice and this permission notice appear in all copies of the
+ * software, derivative works or modified versions, and any portions
+ * thereof, and that both notices appear in supporting documentation.
+ * 
+ * CARNEGIE MELLON ALLOWS FREE USE OF THIS SOFTWARE IN ITS "AS IS"
+ * CONDITION.  CARNEGIE MELLON DISCLAIMS ANY LIABILITY OF ANY KIND FOR
+ * ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
+ * 
+ * Carnegie Mellon requests users of this software to return to
+ * 
+ *  Software Distribution Coordinator  or  Software.Distribution@CS.CMU.EDU
+ *  School of Computer Science
+ *  Carnegie Mellon University
+ *  Pittsburgh PA 15213-3890
+ * 
+ * any improvements or extensions that they make and grant Carnegie Mellon
+ * the rights to redistribute these changes.
+ */
+/*
+ *	Author: David B. Golub, Carnegie Mellon University
+ *	Date: 	8/89
+ *
+ *	 Request-only side of device interface.
+ */
+
+subsystem device_request 2800;	/* to match device.defs */
+
+#include <device/device_types.defs>
+
+serverprefix	ds_;
+
+type reply_port_t = MACH_MSG_TYPE_MAKE_SEND_ONCE
+	ctype: mach_port_t;
+
+simpleroutine device_open_request(
+	    device_server_port	: mach_port_t;
+  ureplyport reply_port		: reply_port_t;
+	in  mode		: dev_mode_t;
+	in  name		: dev_name_t
+	);
+
+skip;	/*    device_close */
+
+simpleroutine device_write_request(
+	    device		: device_t;
+  ureplyport reply_port		: reply_port_t;
+	in  mode		: dev_mode_t;
+	in  recnum		: recnum_t;
+	in  data		: io_buf_ptr_t
+	);
+
+simpleroutine device_write_request_inband(
+	    device		: device_t;
+  ureplyport reply_port		: reply_port_t;
+	in  mode		: dev_mode_t;
+	in  recnum		: recnum_t;
+	in  data		: io_buf_ptr_inband_t
+	);
+
+simpleroutine device_read_request(
+	    device		: device_t;
+  ureplyport reply_port		: reply_port_t;
+	in  mode		: dev_mode_t;
+	in  recnum		: recnum_t;
+	in  bytes_wanted	: int
+	);
+
+simpleroutine device_read_request_inband(
+	    device		: device_t;
+  ureplyport reply_port		: reply_port_t;
+	in  mode		: dev_mode_t;
+	in  recnum		: recnum_t;
+	in  bytes_wanted	: int
+	);

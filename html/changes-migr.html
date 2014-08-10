@@ -1,0 +1,65 @@
+<html>
+<head><title> Changes in the Head Branch </title></head>
+<body>
+<h1> Changes in the Head Branch </h1>
+<hr>
+
+This page explains the major changes made
+in our latest migrating threads source tree,
+with respect to the "frozen" UK02 branch.
+Currently this code is only distributed  for the PA-RISC platform,
+though it is mostly not yet exploited there.
+
+<ul>
+<li>	<b>Migrating Threads:</b>
+	See the paper
+	<a href="ftp://mancos.cs.utah.edu/papers/thread-migrate.html">
+	Evolving Mach 3.0 to a Migrating Thread Model</a>.
+	<p>
+
+<li>	<b>Kernel Activations:</b>
+	Most kernel code now runs on ordinary activations
+	that are just like normal user-mode activations in most respects,
+	rather than in a special kernel environment.
+	The net effect is lower kernel memory consumption
+	and more symmetry between syscalls/traps and migrating RPC.
+	(See the migrating threads paper for information on what an activation is.)
+	<p>
+
+<li>	<b>Presentation/Interface RPC:</b>
+	See the paper
+	<a href = "ftp://mancos.cs.utah.edu/papers/presint3.html">
+	Using Annotated Interface Definitions to Optimize RPC</a> 
+	and possibly the short paper
+	<a href = "ftp://mancos.cs.utah.edu/papers/presint2.html">
+	Separating Presentation from Interface in RPC and IDLs</a>.
+	<p>
+
+<li>	<b>Standalone Includes:</b>
+	Mach now exports a `mach/sa' include subdirectory,
+	which contains a minimal C-library-like header file tree
+	intended for use by programs linked with libmach_sa.a.
+	Previously, these header files were mostly nonexistant
+	(proper function prototypes were simply not available for libmach_sa.a);
+	the ones that did exist were exported in a way
+	that conflicted with high-level Unix personalities.
+	<p>
+
+<li>	<b>Got rid of Unixoid stuff in libmach.a:</b>
+	The library `libmach.a' is no longer specific to CMU's UX server;
+	instead, it has been stripped of all Unix and C library functionality
+	and modified to supply purely Mach-related functionality.
+	The `libmach_sa.a' library is now a strict superset of `libmach.a',
+	containing everything in `libmach.a' plus some minimal C library functionality.
+	<p>
+
+<li>	<b>(i386) Booting from DOS:</b>
+	Mach can now be booted from under DOS,
+	as an ordinary DOS executable.
+	<p>
+
+</ul>
+
+<hr>
+</body>
+</html>

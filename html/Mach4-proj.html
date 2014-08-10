@@ -1,0 +1,195 @@
+<html>
+<head>
+<title>The Mach 4 Project</title>
+</head>
+
+<body>
+<h1>The Mach 4 Project</h1>
+
+<hr>
+
+The goal of the Mach 4 project
+is to investigate some new research ideas,
+fix the major problems of Mach 3,
+and provide the base needed by the Flux project,
+ending up with a fast, flexible, functional kernel
+worthy of being called Mach version 4.
+We will retain compatibility with Mach 3 to as much as is practical.
+<a href="http://www.cs.utah.edu/projects/flexmach/pimtg.1-95.slides.ps.gz">
+Slides from an overview talk concentrating on aspects of the Mach 4 kernel</a>
+give some details.
+<p>
+
+It is important to note that most of our work distributed up to this
+point (and on the Intel x86 platform, all of it) contains little of our
+research.  On the x86, the distributed changes have been 100% oriented
+to increasing Mach's ease of use and practicality in a PC environment.
+This emphasis is reflected in these pages.  The research and development
+are happening, and will be available eventually.
+<hr>
+
+
+<h2>Release Information</h2>
+
+<h3>Current Release</h3>
+<ul>
+<li><a href = "http://www.cs.utah.edu/projects/flux/mach4-i386/html/UK02p21-release.html">Release UK02p21</a> (November 3, 1995)
+</ul>
+
+<h3>Old Release Information</h3>
+
+The latest Mach snapshot for the x86 is available by <a
+href="ftp://flux.cs.utah.edu:/flux/">anonymous FTP to
+flux.cs.utah.edu</a>.
+In general, the PA version has not yet been wholly integrated with
+these rather x86-specific mach4 notes or the source code--
+as currently distributed, they are separate tar files.
+This will change!
+<p>
+
+See the "changes" sections below, the
+ChangeLogs in the source distribution,
+and the mailing list archive to find out what's new and
+different from CMU's version of Mach, and what is planned for the near
+future.  We will be putting some more complete documentation in these
+Web pages before long.
+<p>
+
+The current snapshot is primarily based on CMU's MK83a, with a totally
+new GNU-style build environment and changes by Johannes Helander to
+support the Lites server.  The hp700 support is all new vs. MK83.  On
+the x86, we have introduced a new microkernel boot mechanism and
+incorporated changes from Remy Card to support Linux ext2 filesystems,
+and changes from Csizmazia Balazs to support MINIX filesystems.
+The kernel also contains some new device drivers provided by
+Shantanu Goel and Steve Clawson.
+The x86 kernel can be booted from either Linux, NetBSD, or Mach boot
+loaders, runs Lites with no problem, but does not incorporate any of
+our research work.  However, that will be coming soon.
+<p>
+
+<hr>
+
+<h2>Mailing Lists</h2>
+
+Send a message to <a href = "mail-mach4-users-request.html">
+<b>mach4-users-request@cs.utah.edu</b></a>
+to get on the <b>mach4-users</b> mailing list,
+which is for general questions and discussion regarding the Mach 4 project.
+You can get a
+<a href="ftp://jaguar.cs.utah.edu:/flexmach/mach4-users-archive">
+copy of the mailing list archive from jaguar.cs.utah.edu</a>
+ (1.3MB in November '95).
+<p>
+
+You can also read the <b>mach4-users</b> mailing list archive <b>on-line</b>
+either by 
+<a href =
+"http://www.cs.utah.edu/projects/flexmach/lists/mach4-users/threads.html">
+threads</a> or by 
+<a href
+="http://www.cs.utah.edu/projects/flexmach/lists/mach4-users/maillist.html">
+subject</a>.
+<p>
+
+If you would prefer to see only announcements relating to the project,
+send a message to <a href = "mail-mach4-announce-request.html">
+<b>mach4-announce-request@schirf.cs.utah.edu</b></a>
+to get on the <b>mach4-announce</b> mailing list,
+which is a lower-volume list for announcements only.
+Note that if you are on the mach4-users mailing list,
+you will <b>also</b> see everything posted to the mach4-announce list:
+you do <b>not</b> need to be on both lists at once.
+<p>
+
+
+<p>
+
+<b>Warning:</b>
+There is probably a lot of slightly (or grossly) out-of-date information in these pages;
+it's impossible to keep them up-to-date all the time.
+If you find anything obviously inaccurate or out-of-date,
+please send us a message,
+preferably containing some replacement text that we can simply glue in.
+It'll get updated faster that way.
+<p>
+
+<h2>More Information</h2>
+<ul>
+<li>	<b><a href="install.html">Installation</a>:</b>
+	How to get Mach configured, compiled, and installed on your system.
+	Mach can be compiled using native build tools on Linux, BSD, Mach+UX, and Mach+Lites,
+	and can be cross-compiled from any environment
+	on which you can build the necessary GNU cross-development tools.
+	<p>
+
+<li>	<b><a href="projects.html">Subprojects</a>:</b>
+	Some things needing to be done or currently in progress.
+	<b>You can help!</b>
+	<p>
+
+<li>	<b><a href="changes.html">Changes already made to Mach</a>:</b>
+	Things that have already been done.
+	Includes some notes on how to bring older ports to other architectures
+	up-to-date with the latest Mach4 releases.
+	<p>
+
+<li>	<b><a href = "http://www.cs.utah.edu/projects/flexmach/papers.html#MACH">Mach-related papers</a>:</b>
+	PostScript papers available describing
+	some of the Mach restructuring work in more detail.
+	<p>
+<li>	The <b><a href =
+"http://www.cs.utah.edu/projects/flexmach/lists/mach4-users/threads.html">
+	mach4-users Mailing List Archive</a></b>
+	is available for reading online.  The archive can also be
+	viewed sorted by
+	<b><a href =
+"http://www.cs.utah.edu/projects/flexmach/lists/mach4-users/maillist.html">
+	subject</a></b>.
+
+	
+</ul>
+
+
+<h2>Related Projects</h2>
+<ul>
+
+<li>	<b><a href="http://www.cs.hut.fi/~jvh/lites.html">Lites</a>:</b>
+	A usable, free Mach single server, based on BSD 4.4 Lite,
+	which currently runs on the x86, PA-RISC, and pc532, with preliminary
+	ports to the R3000 and Alpha.
+	On the x86, Lites supports binary compatibility with Linux, NetBSD,
+	and FreeBSD.  Currently, we distribute
+	<a href = "/projects/flux/lites/html/">
+	the most recent release of Lites</a>.
+	<p>
+
+<li>	<b><a href="http://www.cs.pdx.edu/~trent/gnu/hurd/">Hurd</a>:</b>
+	The Free Software Foundation's new multiserver,
+	now somewhat functional and close to being self-hosting.
+	Mail to <addr>hurd-ann-request@gnu.ai.mit.edu</addr> for more information.
+	<p>
+
+<li>	<b><a href="http://riwww.osf.org:/os/index.html">
+	OSF Mach project</a>:</b>
+	The Open Software Foundation is doing lots of work with
+	two versions of the Mach kernel (Mach 3 and MK++)
+	and the "AD2" operating system servers above Mach.
+	<p>
+
+<li>	<b><a href="http://www.cs.cmu.edu:/afs/cs.cmu.edu/project/mach/public/www/mach.html">
+	Original CMU Mach project</a>:</b>
+	This page contains information about the original Mach project at CMU,
+	and the Mach 3.0 kernel which is the starting point of the Mach 4 project.
+	It still contains useful documentation and other pointers.
+	<p>
+
+</ul>
+
+<b><a href = "http://www.cs.utah.edu/projects/flexmach/index.html">UP: Flex/Mach project</a></b>
+
+<hr>
+<address><A HREF="mailto:spo@cs.utah.edu">spo@cs.utah.edu</A><br>
+Last modified Fri Nov 3 1995</address>
+</body>
+</html>

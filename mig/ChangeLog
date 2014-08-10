@@ -1,0 +1,126 @@
+Thu Feb 29 12:46:40 1996  steve clawson  <sclawson@marker.cs.utah.edu>
+
+	* user.c (WriteMsgCheckReceive): If the reply-port isn't
+	user-supplied and there was a message transmission error, then
+	deallocate it.  From Michael I Bushnell (mib@gnu.ai.mit.edu).
+
+	* user.c (WriteMsgCheckIdentity): Dealloc reply port if a
+ 	mismatched reply comes in to avoid cascaded errors.  From 
+	Michael I Bushnell (mib@gnu.ai.mit.edu).
+	
+	
+Wed May  3 13:59:54 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+	Merged in diffs from UK02p12 to UK02p15:
+
+	Wed May  3 10:47:41 MDT 1995  Bryan Ford <baford@cs.utah.edu>
+
+		* Released UK02p15.
+
+		* mig_string.h: include string.h instead of strings.h
+
+		* user.c, lexxer.l: changed index/rindex to strchr/strrchr.
+
+Fri Feb 10 13:25:54 MST 1995  Bryan Ford <baford@cs.utah.edu>
+
+	Merged in diffs from UK02p7 to UK02p9:
+
+	Sun, 29 Jan 1995  Remy.Card@masi.ibp.fr (Remy CARD)
+
+		Fixed a bug that causes mig to generate bad file names
+		in #include directives when generating the user source file.
+
+Fri Nov 25 13:56:32 MST 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	Merged in diffs from UK02p6 to UK02p7:
+
+	* MIG now compiles under BSD without 'vm_???_t' types
+	  conflicting between host (BSD) and target (Mach)
+	  header files.  Basically, the MIG source files compiled
+	  to run on the host machine no longer include mach/message.h;
+	  instead they get the needed defines through cpu.h
+	  which is built by compiling cpu.sym for the target machine.
+
+Mon Aug 29 18:31:21 1994  Bryan Ford  (baford@cs.utah.edu)
+
+	* got rid of /usr/bin pathname in call to basename:
+	basename isn't always in /usr/bin.
+
+Fri Aug 26 11:36:10 1994  Louis-D. Dubeau  (hallu@info.polymtl.ca)
+
+	* Fixed mig.sh to pass -imacros flags to CPP correctly.
+
+Tue Sep  6 10:00:29 1994  Roland McGrath (roland@churchy.gnu.ai.mit.edu)
+
+	* Released UK02p6.
+
+	* use strerror instead of sys_errlist if it's available.
+
+	* Other minor portability fixes.
+
+Mon Aug 15 18:37:47 1994  Roland McGrath  <roland@churchy.gnu.ai.mit.edu>
+
+	* global.c (more_global): Prepend RoutinePrefix to ServerDemux
+	even for non-default value of ServerDemux.
+
+Fri Jul  8 14:36:53 1994  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
+
+	* routine.h (rtSkip): Take int arg.
+	* routine.c (rtSkip): Take int arg and increment by that many.
+	* parser.y (Statement): Grok `skip N;'; pass int arg to rtSkip.
+
+Fri May 13 15:08:56 1994  Michael I Bushnell  (mib@churchy.gnu.ai.mit.edu)
+
+	* user.c (WriteMsgCheckReceive): Deallocate the reply port also if
+	we get one of the send errors that can cause the message to be
+	partially sent and then destroyed; otherwise we might later get a
+	spurious send-once notification.
+
+Wed Aug  4 10:34:42 1993  Michael I. Bushnell  (mib at ernst.gnu.ai.mit.edu)
+
+	* Makefile: Don't use flex or bison; use lex and yacc instead.
+
+	* migcom.c (myfopen): Added extern declaration of errno.
+
+Wed Jun 30 19:46:51 1993  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
+
+	* user.c (WriteUser): Call WriteImport for skImport and skUImport
+	statements.
+	(WriteUserIndividual): Write all the import and uimport statements
+	to each file.
+
+Mon Jun 28 22:07:14 1993  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
+
+	* utils.c (WriteStaticShortDecl, WriteCheckDecl,
+	WriteStaticLongDecl): Generate a `const' definition.
+
+Fri Jun 25 17:53:26 1993  Roland McGrath  (roland@churchy.gnu.ai.mit.edu)
+
+	* utils.c (WriteCopyType): Write SubrPrefix before `mig_strncpy'.
+
+	* user.c (WriteRequestHead): Write SubrPrefix before
+	`mig_get_reply_port'.
+	(WriteMsgCheckReceive): Write SubrPrefix before
+	`mig_dealloc_reply_port'.
+	(WritePackArgValue): Write SubrPrefix before `mig_strncpy'.
+	(WriteExtractArgValue): Likewise.
+	(WriteExtractArgValue): Write SubrPrefix before `mig_allocate'.
+	(WriteMsgSend): Write SubrPrefix before `mach_msg_send_from_kernel'
+	and `mach_msg'.
+	(WriteMsgSendReceive): Write SubrPrefix before `mach_msg'.
+	(WriteMsgRPC): Write SubrPrefix before `mach_msg_rpc_from_kernel'
+	and `mach_msg'.
+
+	* server.c (WriteDestroyArg): Write SubrPrefix before `mig_deallocate'.
+	(WritePackArgValue): Write SubrPrefix before `mig_strncpy'.
+	(WriteDestroyPortArg): Write SubrPrefix before `ipc_port_release_send'.
+	(WriteAdjustMsgCircular): Write SubrPrefix before
+	`ipc_port_check_circularity'.
+
+	* routine.c (rtCheckRoutine): Prepend RoutinePrefix to
+	RT->rtServerName and RT->rtUserName.
+
+	* migcom.c (parseArgs): Recognize -subrprefix and -prefix.
+
+	* global.c (SubrPrefix, RoutinePrefix): Define new variables.
+	* global.h: Declare them.

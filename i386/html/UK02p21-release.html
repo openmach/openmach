@@ -1,0 +1,381 @@
+<html>
+<head><title>Mach4 UK02p21 Release Notes</title></head>
+<body>
+<h1>Mach4 UK02p21 Release Notes</h1>
+<i>November 3, 1995</i>
+
+<hr>
+<h2><a name="contents">Contents</a></h2>
+<dl>
+<dd><a href="#overview">Overview</a>
+<dd><a href="#tested">Tested Configurations</a>
+<dd><a href="#ftpinfo">FTP information</a>
+<dd><a href="#details">Details</a>
+</dl>
+
+<hr>
+<h2><a name="overview">Overview</a></h2>
+
+UK02p21 is a public release of the so-called
+<a href="http://www.cs.utah.edu/projects/flux/mach4/html/Mach4-proj.html">
+``Mach4''</a>
+kernel for the Intel x86 processor family.  Mach4 is one component of the
+<a href="http://www.cs.utah.edu/projects/flux/">
+Flux</a>
+project at the
+<a href="http://www.cs.utah.edu/">
+University of Utah Computer Science Department</a>.
+The focus of the x86 branch has been to make Mach more usable on PCs,
+with particular emphasis on ease of building, compatibility with a number
+of OS environments and additional hardware support.  This release
+reflects the latest development in those areas.
+
+<p>
+
+
+<p><h3>New in UK02p21, since p13:</h3><p>
+
+<ul>
+<li>	  Compatibility: support unmodified
+	  <a href = "#linuxdev">Linux network drivers</a>
+	   in Mach, from Shantanu Goel of Columbia.
+
+<li>	<a href = "#booting">Booting</a>:
+	kernel has been mostly updated to conform to 
+	<a href = "ftp://flux.cs.utah.edu/flux/boot-proposal-0.3">MultiBoot-0.3</a>,
+        BSD boot adapter
+	   code passes along root device and command line
+	  options from Mach, FreeBSD and NetBSD bootblocks to Mach,
+	and Linux boot adapter
+	   passes LILO command line options and root device to Mach.
+
+<li>      <a href="#kerneldebug">Kernel debugger</a> again works (a.out only).
+	  
+<li>      <a href="#rconsole">Remote console</a> support again works.
+
+<li>      Native drivers: added a contributed
+	<a href="#ne2000">NE2000 driver</a>;
+	  IDE (nhd) device driver uses LBA mode on drives that support
+	  it.
+
+<li>	<a href = "#various">Various other random things</a>.
+	Note the warnings re building Lites and the Linux boot adaptor code.
+</ul>	  
+
+
+<hr>
+<h2><a name="tested">Tested Configurations</a></h2>
+<p>    
+All configurations were built using i386-mach cross-build tools, which can
+be
+found at:
+<a href="ftp://flux.cs.utah.edu/flux/binaries/i386">
+ftp://flux.cs.utah.edu/flux/binaries/i386</a>.
+<p>
+
+The kernel was tested with
+<a href = "http://www.cs.utah.edu/projects/flux/lites/html/lites-1.1.u2.html">
+Lites-1.1.u2</a>
+ running on the following base systems:
+<p>
+
+<dl>
+<dd>       FreeBSD 2.0.5 
+<dd>       FreeBSD 2.1.0-950726-SNAP 
+<dd>       NetBSD-1.0 
+</dl>
+
+	The system was also booted on a system running UX42 on a CMU Mach
+	base. 
+
+<p>    
+
+<hr>
+<h2><a name="ftpinfo">Ftp Information</a></h2>
+
+<h3>Mach4 and Mach4-i386</h3>
+
+<dl>
+<dt><b>Sources</b>
+<dd><a href = "ftp://flux.cs.utah.edu/flux/mach4-UK02p21.tar.gz">
+       ftp://flux.cs.utah.edu/flux/mach4-UK02p21.tar.gz</a>
+<dd><a href = "ftp://flux.cs.utah.edu/flux/mach4-i386-UK02p21.tar.gz">
+       ftp://flux.cs.utah.edu/flux/mach4-i386-UK02p21.tar.gz</a>
+<dd><a href = "ftp://flux.cs.utah.edu/flux/patch-UK02p13-UK02p21.gz">
+       ftp://flux.cs.utah.edu/flux/patch-UK02p13-UK02p21.gz</a>
+<dd><a href = "ftp://flux.cs.utah.edu/flux/patch-i386-UK02p13-UK02p21.gz">
+       ftp://flux.cs.utah.edu/flux/patch-i386-UK02p13-UK02p21.gz</a>
+
+<dt><b>Intel x86: BSD bootable Binaries</b>
+
+<dd><a href = "ftp://flux.cs.utah.edu/flux/binaries/i386/mach4/Mach">
+       ftp://flux.cs.utah.edu/flux/binaries/i386/mach4/Mach</a>
+<dd><a href = "ftp://flux.cs.utah.edu/flux/binaries/i386/mach4/Mach+linuxdev">
+       ftp://flux.cs.utah.edu/flux/binaries/i386/mach4/Mach+linuxdev</a>
+
+<dt><b>Intel x86: Linux bootable Binaries</b>
+
+<dd><a href = "ftp://flux.cs.utah.edu/flux/binaries/i386/mach4/zMach">
+       ftp://flux.cs.utah.edu/flux/binaries/i386/mach4/zMach</a>
+<dd><a href = "ftp://flux.cs.utah.edu/flux/binaries/i386/mach4/zMach+linuxdev">
+       ftp://flux.cs.utah.edu/flux/binaries/i386/mach4/zMach+linuxdev</a>
+
+</dl>
+
+<hr>
+<h2><a name="details">Details</a></h2>
+
+<h3><a name="linuxdev">Linux Device Drivers:</a></h3>
+
+Shantanu Goel (goel@cs.columbia.edu) has modified Mach to accept
+mostly unchanged Linux network device drivers.
+He has
+work in progress to support SCSI host adapters and all block devices,
+which should be available "soon."
+All this work is described in the paper
+``Linux Device Driver Emulation in Mach''
+by Shantanu Goel and Dan Duchamp of the
+<a href = "http://www.mcl.cs.columbia.edu/">
+Columbia Mobile Computing Laboratory</a>.  The paper will be presented at 
+<a href = "http://usenix.org/sd96.html">
+1996 USENIX Annual Technical Conference</a>.  The
+paper will be available by November 16, 1995, at which time we'll add
+a link to it here.
+<p>
+To enable the Linux device driver support, use ``--enable-linuxdev''
+when configuring Mach4.  You
+cannot mix native network drivers with the Linux network drivers.
+<p>
+Be aware that since the drivers are from Linux, they are all covered by the
+<a href = "http://www.cs.utah.edu/csinfo/texinfo/emacs19/emacs_3.html#SEC3">
+GPL</a>.
+	
+
+<h4>Testing status</h4>
+<dl> The drivers that have been tested at Columbia are:
+<dd>    Western Digital 8003 and clones
+<dd>    SMC Ultra
+<dd>    NE2000 and clones
+<dd>    AMD LANCE based boards 
+<dd>    3Com 3c503 (Etherlink II)
+</dl>    
+We have tested the linuxdev code
+	with HP PCLAN Plus and NE2000 clones, and while they
+	work, we have had problems on fast machines and suggest
+	that you use the native Mach ethernet drivers if you can.
+	Please report your experiences with other hardware.
+<p>
+No PCI boards work yet, since there is currently no support for PCI in
+Mach.  (That will also be provided "soon" via more linuxdev work.)
+<p>
+<dl> Complete list of Linux network drivers in the source tree:
+<dd> de4x5.c: A DIGITAL DE425/DE434/DE435/DE500 ethernet driver for Linux.
+<dd> depca.c: A DIGITAL DEPCA  & EtherWORKS ethernet driver for linux.
+<dd> ewrk3.c: A DIGITAL EtherWORKS 3 ethernet driver for linux.
+<dd> 3c501.c: A 3Com 3c501 ethernet driver for linux.
+<dd> 3c503.c: A shared-memory NS8390 ethernet driver for linux.
+<dd> 3c507.c: An EtherLink16 device driver for Linux.
+<dd> 3c509.c: A 3c509 EtherLink3 ethernet driver for linux.
+<dd> 8390.c: A general NS8390 ethernet driver core for linux.
+<dd> ac3200.c: A driver for the Ansel Communications EISA ethernet adaptor.
+<dd> apricot.c: An Apricot 82596 ethernet driver for linux.
+<dd> at1700.c: A network device driver for  the Allied Telesis AT1700.
+<dd> atp.c: Attached (pocket) ethernet adapter driver for linux.
+<dd> e2100.c: A Cabletron E2100 series ethernet driver for linux.
+<dd> eepro.c: Intel EtherExpress Pro/10 device driver for Linux.
+<dd> eexpress.c: Intel EtherExpress device driver for Linux.
+<dd> hp-plus.c: A HP PCLAN/plus ethernet driver for linux.
+<dd> hp.c: A HP LAN ethernet driver for linux.
+<dd> lance.c: An AMD LANCE ethernet driver for linux.
+<dd> ne.c: A general non-shared-memory NS8390 ethernet driver for linux.
+<dd> seeq8005.c: A network driver for linux.
+<dd> smc-ultra.c: A SMC Ultra ethernet driver for linux.
+<dd> tulip.c: A DEC 21040 ethernet driver for linux.
+<dd> wd.c: A WD80x3 ethernet driver for linux.
+<dd> znet.c: An Zenith Z-Note ethernet driver for linux.
+<dd>   Linux ethernet device driver for the 3Com Etherlink Plus (3C505)
+<dd>   Linux driver for the D-Link DE-600 Ethernet pocket adapter.
+<dd>   Linux driver for the D-Link DE-620 Ethernet pocket adapter.
+<dd>   hp100.c: Hewlett Packard HP10/100VG ANY LAN ethernet driver for Linux.
+<dd>   net-3-driver for the NI5210 card (i82586 Ethernet chip)
+<dd>   ni6510 (am7990 'lance' chip) driver for Linux-net-3 by MH
+<dd>   Schneider & Koch G16 Ethernet Device Driver for
+<dd>   AT&T GIS (nee NCR) WaveLAN card.
+</dl>
+
+<hr>
+<h3><a name="booting">Booting:</a></h3>
+
+<b>BSD and Mach</b><p>
+
+	Booting from Mach, NetBSD and FreeBSD bootblocks should now work
+as you'd expect.  The kernel uses the bootdev and boothowto fields that
+are passed from the bootblocks, so now you can boot from an alternate
+root/partition without hardcoding it in setroot.c.  Any command line
+arguments are likewise passed along to the kernel and server.  
+<p>
+	The old Mach bootblocks don't support loading NMAGIC kernels,
+which is a problem since that's usually what the Mach boot image is.  So,
+if you're going to be booting from the original Mach bootblocks, you can
+either build ZMAGIC or OMAGIC kernels, or you'll can make a small
+change to the Mach bootblocks to recognize NMAGIC binaries: 
+<p>
+
+<pre>
+*** boot.c      Wed Sep  1 17:14:33 1993
+--- newboot.c       Fri Nov  3 03:34:52 1995
+***************
+*** 137,143 ****
+        read(&head, sizeof(head));
+!       if (head.a_magic == 0407)
+                poff = 32;
+        else if (head.a_magic == 0413 ) {
+                poff = 0;
+                head.a_text += sizeof(struct exec);
+        } else {
+--- 137,143 ----
+        read(&head, sizeof(head));
+!       if (head.a_magic == 0407 || head.a_magic == 410)
+                poff = 32;
+        else if (head.a_magic == 0413) {
+                poff = 0;
+                head.a_text += sizeof(struct exec);
+        } else {
+</pre>
+
+<hr>
+<h3><a name="kerneldebug">Kernel Debugger:</a></h3>
+
+
+The kernel debugger
+is once again useful, supporting symbols and backtraces.  The problem
+was that the symbol table for the kernel wasn't getting loaded,
+which broke a number of things (now
+at least the kernel and server symbol tables are being loaded, but the
+bootstrap and emulator's aren't).
+However, 
+symbols are only loaded if the
+kernel is a.out.  If you feel you have to build your kernel as ELF, then
+you don't get symbols.
+
+<hr>
+<p><h3><a name="rconsole">Remote console support:</a></h3><p>
+
+
+      Remote console support is working again.  This is
+NOT the same as a serial console; basically it just spews out kernel
+messages to your favorite serial port.  This can be very useful for
+logging the output of the system
+and using the kernel debugger over the serial line.
+<p>
+	To enable the remote console support, you must change a
+#define in mach4-i386/kernel/bogus/rc.h.  RCLINE is the number of the 
+serial device that you want to use, and RCBAUD is the speed.  The
+options for RCLINE are shown below, as taken from autoconf.c, for the
+``com'' device.
+
+
+<p><b>options for RCLINE:</b>
+
+<pre>
+RCLINE		info
+------		---------------------------
+0  		(port 0x3f8/irq 4 DOS COM1)
+1	    	(port 0x2f8/irq 3 DOS COM2)
+2		(port 0x3e8/irq 5 DOS COM3)
+3	    	(port 0x2e8/irq 9 DOS COM4)
+</pre>
+
+
+<hr>
+<h3><a name="ne2000">NE2000 device driver:</a></h3>
+
+     This is a device driver for the ne2000 series of ethernet cards.  It
+was ported from 386BSD by Shang-te Hsu of the Computer System Lab, Dep. of
+Computer & Information Science National Chiao Tung University in Hsinchu,
+Taiwan.  The driver was sent to us by Terrence Mitchem (mitchem@sctc.com).
+We've only tested the driver with an ne2000 clone card, but the original
+README said that it supported the ``NE1000, NE2000, DE-100, DE-200, DE-220''
+cards.  <p>
+     The driver is configured to look for cards set up as:
+<p>
+(ne0) port 0x280, memory addr 0xd0000, irq 5 
+<br>
+(ne1) port 0x300, memory addr 0xd0000, irq 10	
+<p>
+
+     If you need to change this, go into 
+mach4-i386/kernel/i386at/autoconf.c and you'll find a section that looks
+like this:
+<p>
+<pre>
+#if NNE > 0
+ {&nedriver, "ne", 0, neintr, 0x280,0x4000,0xd0000,
+      '?',    0,   -1,    -1,    0,   0,        0,   SPL_SIX, 5},
+ {&nedriver, "ne", 1, neintr, 0x300,0x4000,0xd0000,
+      '?',    0,   -1,    -1,    0,   0,        0,   SPL_SIX, 10},
+#endif NNE > 0
+</pre>
+<p>
+     Change the 4th, 6th and/or the last (port, mem, irq) to match
+your card and recompile the kernel.  If you want to disable the driver
+or want to add more than one card, look in mach4-i386/kernel/bogus/ne.h
+and change the #define to either be 0, or greater than one.  The number
+after the ``ne'' is the number that it will be configured for if found.
+So, a card at port 0x280 irq 5 will be configured as ne0.
+    
+    
+<hr>
+<h3><a name="various">Other Changes, in no particular order:</a></h3>
+
+<ul>
+<li> To build Lites with the include files
+that come with this release, you'll have at least one problem.
+EFL_USER_SET is no longer exported in include/mach/machine/eflags.h,
+so compiling lites/emulator/i386/e_exception.c will give you an error.
+Since the kernel always sets the efl state to be EFL_USER_SET, Lites
+shouldn't bother with setting it.  The fix is to just replace
+EFL_USER_SET with 0.
+
+<li>      Use the .code16 directive of gas instead of AS86, LD86.  This
+	  mostly affects the Linux boot adapter code.  You <b>MUST</b>
+	  have a
+	  recent snapshot of gas to compile the kernel because of this.
+	  Check <a href="ftp://flux.cs.utah.edu/flux/gas-950428.tar.gz">
+	  ftp://flux.cs.utah.edu/flux/gas-950428.tar.gz</a>.
+
+<li>	  Small addition to trap.c to support NetBSD-current and Linux 
+	  system call traps (for Lites).
+
+<li>      Modifications to compile with gcc 2.7.0.
+
+<li>      Support for building ELF kernels (use ``--enable-elf'' to turn
+	  this on).  Note that the kernel debugger and symbols currently don't
+	  work for ELF kernels.
+
+<li>	  Now uses libmach_exec, which supports ELF and a.out.  This is
+	  part of the ELF support, so that we can exec an ELF
+	  kernel/bootstrap.
+
+<li>      Cleaned up the use of EXT/LEXT/ENTRY macros in the kernel.
+
+<li>      Only have to specify ``--with-mach4='' if mach4 is in a strange place.
+
+<li>      Various other makefile changes, too numerous to detail...
+
+<li>	  Other bug fixes, of course.
+</ul>
+
+
+<hr>
+<address><a href="http://www.cs.utah.edu/~sclawson/">Stephen Clawson</a>
+&lt;<a
+href="mailto:sclawson@cs.utah.edu">sclawson@cs.utah.edu</a>&gt;<br></address>
+November 3, 1995
+</body>
+
+<!-- Local Variables: -->
+<!-- mode: indented-text -->
+<!-- left-margin: 4 -->
+<!-- fill-column: 74 -->
+<!-- End: -->

@@ -1,0 +1,56 @@
+#
+# Copyright (c) 1994 The University of Utah and
+# the Computer Systems Laboratory (CSL).  All rights reserved.
+#
+# Permission to use, copy, modify and distribute this software and its
+# documentation is hereby granted, provided that both the copyright
+# notice and this permission notice appear in all copies of the
+# software, derivative works or modified versions, and any portions
+# thereof, and that both notices appear in supporting documentation.
+#
+# THE UNIVERSITY OF UTAH AND CSL ALLOW FREE USE OF THIS SOFTWARE IN ITS "AS
+# IS" CONDITION.  THE UNIVERSITY OF UTAH AND CSL DISCLAIM ANY LIABILITY OF
+# ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
+#
+# CSL requests users of this software to return to csl-dist@cs.utah.edu any
+# improvements that they make and grant CSL redistribution rights.
+#
+#      Author: Bryan Ford, University of Utah CSL
+#
+
+
+# All the programs and other cruddy little definitions
+# are made in just one place, here.
+# The directory names still need to be defined
+# in their own Makefiles, since they have to vary
+# depending on what directory level they're at.  <sigh>
+
+SHELL		= /bin/sh
+
+export CC	= @CC@
+export LD	= @LD@
+export STRIP	= @STRIP@
+export AR	= @AR@
+export RANLIB	= @RANLIB@
+
+HOST_CC		= @HOST_CC@
+
+LEX		= @LEX@
+LEXLIB		= @LEXLIB@
+YACC		= @YACC@
+AWK		= @AWK@
+INSTALL		= @INSTALL@
+
+DEFINES		= @DEFS@
+
+# These get set to "yes" if the user specified
+# the corresponding --enable-xxx options to configure.
+ENABLE_MP	= @enable_mp@
+ENABLE_LIBMACH	= @enable_libmach@
+ENABLE_ELF	= @with_elf@
+
+INSTALL_INCDIR	= $(prefix)/include
+INSTALL_BINDIR	= $(exec_prefix)/bin
+INSTALL_LIBDIR	= $(exec_prefix)/lib
+INSTALL_BOOTDIR	= $(INSTALL_LIBDIR)/mach-boot
+

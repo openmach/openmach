@@ -1,0 +1,144 @@
+<html>
+<head><title> Projects </title></head>
+<body>
+<h1> Projects </h1>
+
+We can't do everything we want to by ourselves;
+we're depending on other hackers in the Internet community joining in
+and helping us in various ways.
+This page describes a number of Mach subprojects
+that anyone with the appropriate skills
+is welcome to join in and help with,
+as well as a few projects already in progress
+that might be benefitted by some extra help as well.
+If you have anything to add to this page,
+just send it to me (Bryan Ford, <addr>baford@cs.utah.edu</addr>).
+
+<hr>
+<h2>Needing to be Done</h2>
+
+Here are some specific projects that really need to be done,
+but we won't have time to do ourselves any time soon.
+If you see anything in this section that you're interested in doing,
+just contact me to find out any further details that may be available
+or if anyone else is already working on it,
+and then go to it!
+
+<ul>
+<li>	<b>Easy-to-install Mach distribution:</b>
+	In order to attract more people from the Linux/BSD crowd,
+	we really need someone to put together an easy-to-install Mach+Lites
+	or (when it's mature enough) Mach+Hurd binary distribution.
+	This distribution might be just an add-on supplement
+	to an existing monolithic-kernel distribution,
+	or it could be an entirely separate distribution with a whole new set of binaries.
+	Of course, a simple add-on to an existing distribution
+	is likely to be simpler and more popular,
+	so we should try to go with that approach if at all possible.
+	(Mach+Lites on the i386 is already pretty close
+	to being a drop-in NetBSD kernel replacement.)
+	<p>
+
+<li>	<b>New Boot Loader for PCs:</b>
+	Currently we have to choose between the Mach/BSD boot blocks,
+	which are totally brain-dead and unfriendly in various respects,
+	and LILO (the Linux Loader), which is nice and featureful
+	but has the stupid restriction of not being able to load any boot image
+	larger than about 512KB.
+	Also, some appropriate boot loader support
+	could make Mach's new boot module system much cleaner and more efficient
+	and get rid of various horrible kludges.
+	Note that this new boot loader could (and should)
+	be useful to the BSD, Linux, and VSTa communities as well.
+	<p>
+
+	The boot loader should ideally would fulfill at least these requirements:
+	<ul>
+	<li>	Backward compatible with Linux, Mach, and BSD boot images.
+	<li>	Functional under Linux, NetBSD, FreeBSD, and Mach.
+	<li>	User friendly (e.g. like OS/2's Boot Manager).
+	<li>	No size limit on boot images other than available memory.
+	<li>	Ability to load multiple boot modules on bootup
+		directly from different files,
+		eliminating the need to compose large monolithic boot images beforehand.
+	<li>	Ability to operate either by interpreting specific file system types
+		(like the Mach/BSD boot loaders currently do),
+		or by using precalculated block lists
+		(like LILO does).
+	<li>	Be at least somewhat machine-independent,
+		so that applicable parts of the code
+		can be reused on other architectures.
+	</ul>
+	<p>
+
+<li>	<b>New Device Configuration Mechanism:</b>
+	The way Mach devices detect hardware,
+	configure themselves,
+	make themselves known to servers, etc.
+	is currently a horrendous kludge and needs replacing.
+	Anyone interested in doing this, please contact me
+	and I'll give you more details about what I have in mind.
+	<p>
+
+<li>	<b>VSTa integration:</b>
+	Introduce some level of VSTa compatibility into Mach,
+	so we can take advantage of some of the cool stuff that's being done in VSTa.
+	I haven't explored this much yet,
+	so I don't know what might be feasible,
+	but the possibilities should at least be checked out.
+	For starters, it would be great
+	if we just had someone permantly acting as a go-between for the two projects:
+	someone who can keep fairly close track of both systems,
+	keep recent versions of both of them installed and running on their machine,
+	suggest possible ways to cross-fertilize or make the projects converge,
+	and so on.
+	<p>
+
+</ul>
+
+<hr>
+<h2>Currently In Progress</h2>
+
+This is a list of some projects that are underway in various places;
+some of them perhaps could also use some additional help.
+Contact addresses are provided in case you're interested in any of them.
+
+<ul>
+<li>	<b>Linux device drivers on Mach:</b>
+	Creating a framework that will allow Mach to run Linux device drivers
+	in the kernel.
+	May be extended later with user-level device driver support.
+	Contact <addr>goel@cs.columbia.edu (Shantanu Goel)</addr>.
+	<p>
+
+<li>	<b><a href = "ftp://mancos.cs.utah.edu/papers/presint3.html">
+	Presentation/Interface IPC System</a>:</b>
+	A new high-performance, flexible IPC system for Mach.
+	Includes adopting/developing an IDL that's new to Mach.
+	Contact <addr>baford@cs.utah.edu (Bryan Ford)</addr>.
+	<p>
+
+<li>	<b>More research at Utah:</b> most of these are at
+	too early a stage to be worth talking about.
+<a href="http://www.cs.utah.edu/projects/flexmach/pimtg.1-95.slides.ps.gz">
+Slides from an overview talk</a> give some details.
+	<p>
+
+<li>	<b>Improve the PA-RISC support:</b>
+	Debugging support, debugging, lots....
+	Contact <addr>mike@cs.utah.edu (Mike Hibler)</addr>.
+	<p>
+
+<li>	<b>Small CORBA-compliant POSIX-like personality:</b>
+	Contact <addr>csb@tomx.elte.hu (Csizmazia Balazs)</addr>.
+	<p>
+
+<li>	<b>Mach port for the Amiga:</b>
+	Contact <addr>niklas@appli.se (Niklas Hallqvist)</addr>.
+	<p>
+
+</ul>
+
+<hr>
+</body>
+</html>

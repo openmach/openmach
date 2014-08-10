@@ -1,0 +1,66 @@
+#
+# Copyright (c) 1994 The University of Utah and
+# the Computer Systems Laboratory (CSL).  All rights reserved.
+#
+# Permission to use, copy, modify and distribute this software and its
+# documentation is hereby granted, provided that both the copyright
+# notice and this permission notice appear in all copies of the
+# software, derivative works or modified versions, and any portions
+# thereof, and that both notices appear in supporting documentation.
+#
+# THE UNIVERSITY OF UTAH AND CSL ALLOW FREE USE OF THIS SOFTWARE IN ITS "AS
+# IS" CONDITION.  THE UNIVERSITY OF UTAH AND CSL DISCLAIM ANY LIABILITY OF
+# ANY KIND FOR ANY DAMAGES WHATSOEVER RESULTING FROM THE USE OF THIS SOFTWARE.
+#
+# CSL requests users of this software to return to csl-dist@cs.utah.edu any
+# improvements that they make and grant CSL redistribution rights.
+#
+#      Author: Bryan Ford, University of Utah CSL
+#
+ifndef _mach4_kernel_makerules_
+_mach4_kernel_makerules_ = yes
+
+
+# This makefile is for the generic part of the microkernel,
+# and is included by the corresponding machine-dependent makefile.
+
+
+# Old defines that I hope to phase out
+DEFINES += -DMACH_KERNEL -DKERNEL
+
+
+# Required generic sections
+SRCDIRS += $(addprefix $(GSRCDIR)/,	\
+		kernel/device		\
+		kernel/ipc		\
+		kernel/kern		\
+		kernel/vm		\
+		kernel/ddb		\
+		kernel/bogus		\
+		kernel/util		\
+		kernel)
+
+# I'm not sure what to do with `kernel';
+# it's needed because #includes within kernel code have directory names.
+# This may be good or bad.
+# It may be good, because it sort of provides a separate file namespace.
+# (But it doesn't really, because all object files go into one directory anyway.)
+# It is bad in a way because files included like this can't be overridden easily
+# by more-specific program sections.
+
+
+GEN_OBJFILES += version.o
+version.c: $(GSRCDIR)/Version.log
+	echo >$@ \
+	  "char version[] = \"Mach4 `head -1 $(GSRCDIR)/Version.log`, `date`\";"
+CLEAN_FILES += version.c
+
+
+# Include the makefile containing the generic rules.
+include $(GSRCDIR)/Makerules
+
+
+memory_object.o: memory_object_user.h memory_object_default.h
+mach_port.o: mach_interface.h mach_port_interface.h
+
+endif
