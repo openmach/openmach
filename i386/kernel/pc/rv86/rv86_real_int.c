@@ -254,15 +254,15 @@ void rv86_real_int(int intnum, struct real_call_data *rcd)
 	cpu[0].tables.gdt[REAL_TSS_IDX].access &= ~ACC_TSS_BUSY;
 	set_tr(REAL_TSS);
 
-	asm volatile("
-		pushl	%%ebp
-		pushl	%%eax
-		call	rv86_real_int_asm
-		popl	%%eax
-		popl	%%ebp
-	" :
+	asm volatile(
+		"pushl	%%ebp			    \n"
+		"pushl	%%eax			    \n"
+		"call	rv86_real_int_asm	\n"
+		"popl	%%eax			    \n"
+		"popl	%%ebp			    \n"
+	  :
 	  : "a" (rcd), "S" (intnum)
-	  : "eax", "ebx", "ecx", "edx", "esi", "edi");
+	  : "memory");
 
 	/* Switch to the original TSS.  */
 	cpu[0].tables.gdt[old_tr/8].access &= ~ACC_TSS_BUSY;

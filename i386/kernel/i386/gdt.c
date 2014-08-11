@@ -49,40 +49,40 @@ struct real_descriptor gdt[GDTSZ];
 void
 gdt_init()
 {
-	/* Initialize the kernel code and data segment descriptors.  */
-	fill_gdt_descriptor(KERNEL_CS,
-			    LINEAR_MIN_KERNEL_ADDRESS, 
-			    LINEAR_MAX_KERNEL_ADDRESS - LINEAR_MIN_KERNEL_ADDRESS - 1,
-			    ACC_PL_K|ACC_CODE_R, SZ_32);
-	fill_gdt_descriptor(KERNEL_DS,
-			    LINEAR_MIN_KERNEL_ADDRESS, 
-			    LINEAR_MAX_KERNEL_ADDRESS - LINEAR_MIN_KERNEL_ADDRESS - 1,
-			    ACC_PL_K|ACC_DATA_W, SZ_32);
+    /* Initialize the kernel code and data segment descriptors.  */
+    fill_gdt_descriptor(KERNEL_CS,
+                LINEAR_MIN_KERNEL_ADDRESS, 
+                LINEAR_MAX_KERNEL_ADDRESS - LINEAR_MIN_KERNEL_ADDRESS - 1,
+                ACC_PL_K|ACC_CODE_R, SZ_32);
+    fill_gdt_descriptor(KERNEL_DS,
+                LINEAR_MIN_KERNEL_ADDRESS, 
+                LINEAR_MAX_KERNEL_ADDRESS - LINEAR_MIN_KERNEL_ADDRESS - 1,
+                ACC_PL_K|ACC_DATA_W, SZ_32);
 
-	/* Load the new GDT.  */
-	{
-		struct pseudo_descriptor pdesc;
+    /* Load the new GDT.  */
+    {
+        struct pseudo_descriptor pdesc;
 
-		pdesc.limit = sizeof(gdt)-1;
-		pdesc.linear_base = kvtolin(&gdt);
-		lgdt(&pdesc);
-	}
+        pdesc.limit = sizeof(gdt)-1;
+        pdesc.linear_base = kvtolin(&gdt);
+        lgdt(&pdesc);
+    }
 
-	/* Reload all the segment registers from the new GDT.
-	   We must load ds and es with 0 before loading them with KERNEL_DS
-	   because some processors will "optimize out" the loads
-	   if the previous selector values happen to be the same.  */
-	asm volatile("
-		ljmp	%0,$1f
-	1:
-		movw	%w2,%%ds
-		movw	%w2,%%es
-		movw	%w2,%%fs
-		movw	%w2,%%gs
+    /* Reload all the segment registers from the new GDT.
+       We must load ds and es with 0 before loading them with KERNEL_DS
+       because some processors will "optimize out" the loads
+       if the previous selector values happen to be the same.  */
+    asm volatile(
+        "   ljmp    %0,$1f      \n"
+        "1:                     \n"
+        "   movw   %w2,%%ds     \n"
+        "   movw   %w2,%%es     \n"
+        "   movw   %w2,%%fs     \n"
+        "   movw   %w2,%%gs     \n"
 
-		movw	%w1,%%ds
-		movw	%w1,%%es
-		movw	%w1,%%ss
-	" : : "i" (KERNEL_CS), "r" (KERNEL_DS), "r" (0));
+        "   movw   %w1,%%ds     \n"
+        "   movw   %w1,%%es     \n"
+        "   movw   %w1,%%ss     \n"
+     : : "i" (KERNEL_CS), "r" (KERNEL_DS), "r" (0));
 }
 

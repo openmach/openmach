@@ -342,8 +342,7 @@ struct bus_device	*dev;
 	} else
 		printf("ethernet ");
 
-	(volatile char *)sp->sram =
-	    (volatile char *) phystokv(dev->phys_address);
+	sp->sram = (volatile char *) phystokv(dev->phys_address);
 	dev->address = (vm_offset_t) phystokv(dev->address);
 	sp->timer = -1;
 	sp->flags = 0;

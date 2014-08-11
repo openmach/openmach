@@ -27,7 +27,6 @@
  * Support for 80387 floating point or FP emulator.
  */
 #include <cpus.h>
-#include <fpe.h>
 #include <platforms.h>
 
 #include <mach/exception.h>
@@ -136,19 +135,11 @@ init_fpu()
 	    set_cr0(get_cr0() | CR0_TS | CR0_MP);
 	}
 	else {
-#if	FPE
-	    /*
-	     * Use the floating-point emulator.
-	     */
-	    fp_kind = FP_SOFT;
-	    fpe_init();
-#else	/* no fpe */
 	    /*
 	     * NO FPU.
 	     */
 	    fp_kind = FP_NO;
 	    set_cr0(get_cr0() | CR0_EM);
-#endif
 	}
 }
 

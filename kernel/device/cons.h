@@ -46,5 +46,4 @@ struct consdev {
 
 #ifdef KERNEL
 extern	struct consdev constab[];
-extern	struct consdev *cn_tab;
 #endif

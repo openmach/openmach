@@ -1135,9 +1135,11 @@ rescan:
 /*		case AHA_MBI_ABORTED:	/* this we wont see */
 /*		case AHA_MBI_NOT_FOUND:	/* this we wont see */
 		default:
-			log(	LOG_KERN,
+/*
+			LOG(	LOG_KERN,
 				"aha%d: Bogus status (x%x) in MBI\n",
 				unit, mbi.mb.mb_status);
+*/
 			break;
 		}
 		

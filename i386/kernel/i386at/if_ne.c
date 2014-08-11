@@ -281,7 +281,8 @@ struct bus_device *dev;
         if ((unsigned) unit >= NNE)
                 return(0);
 
-        nec = (caddr_t) ns->ns_port = dev->address;
+        ns->ns_port = dev->address;
+	    nec = (caddr_t) ns->ns_port;
 
 	if (ns->card_present) {
 		printf("ne%s : card already present in port %x\n",
@@ -611,7 +612,7 @@ int unit;
 #ifdef	MACH_KERNEL
 	iodone(m);
 	m = 0;
-done:
+done:	;
 #endif	MACH_KERNEL
 }
 

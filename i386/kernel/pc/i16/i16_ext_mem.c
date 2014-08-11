@@ -55,12 +55,12 @@ void i16_ext_mem_check()
 	unsigned short ext_mem_k;
 
 	/* Find the top of available extended memory.  */
-	asm volatile("
-		int	$0x15
-		jnc	1f
-		xorw	%%ax,%%ax
-	1:
-	" : "=a" (ext_mem_k)
+	asm volatile(
+		"int	$0x15		\n"
+		"jnc	1f		    \n"
+		"xorw	%%ax,%%ax	\n"
+	  "1:			        \n"
+	  : "=a" (ext_mem_k)
 	  : "a" (0x8800));
 	ext_mem_top = 0x100000 + (vm_offset_t)ext_mem_k * 1024;
 
@@ -73,31 +73,31 @@ void i16_ext_mem_check()
 	   described in the VCPI spec, version 1.0.  */
 	if (ext_mem_top > ext_mem_bot)
 	{
-		asm volatile("
-			pushw	%%es
+		asm volatile(
+			"pushw	%%es			    \n"
 
-			xorw	%%ax,%%ax
-			movw	%%ax,%%es
-			movw	%%es:0x19*4+2,%%ax
-			movw	%%ax,%%es
+			"xorw	%%ax,%%ax		    \n"
+			"movw	%%ax,%%es		    \n"
+			"movw	%%es:0x19*4+2,%%ax	\n"
+			"movw	%%ax,%%es		    \n"
 
-			movw	$0x12,%%di
-			movw	$7,%%cx
-			rep
-			cmpsb
-			jne	1f
+			"movw	$0x12,%%di		    \n"
+			"movw	$7,%%cx			    \n"
+			"rep				        \n"
+			"cmpsb				        \n"
+			"jne	1f			        \n"
 
-			xorl	%%edx,%%edx
-			movb	%%es:0x2e,%%dl
-			shll	$16,%%edx
-			movw	%%es:0x2c,%%dx
+			"xorl	%%edx,%%edx		    \n"
+			"movb	%%es:0x2e,%%dl		\n"
+			"shll	$16,%%edx		    \n"
+			"movw	%%es:0x2c,%%dx		\n"
 
-		1:
-			popw	%%es
-		" : "=d" (ext_mem_bot)
+			"1:				            \n"
+			"popw	%%es			    \n"
+		  : "=d" (ext_mem_bot)
 		  : "d" (ext_mem_bot),
 		    "S" ((unsigned short)(vm_offset_t)"VDISK V")
-		  : "eax", "ecx", "esi", "edi");
+		  : "memory");
 	}
 	i16_assert(ext_mem_bot >= 0x100000);
 
