@@ -31,28 +31,29 @@
 /* Macros to switch between 16-bit and 32-bit code
    in the middle of a C function.
    Be careful with these!  */
-#define i16_switch_to_32bit() asm volatile("
-		ljmp	%0,$1f
-		.code32
-	1:
-	" : : "i" (KERNEL_CS));
-#define switch_to_16bit() asm volatile("
-		ljmp	%0,$1f
-		.code16
-	1:
-	" : : "i" (KERNEL_16_CS));
+#define i16_switch_to_32bit() asm volatile( \
+        "ljmp   %0,$1f              \n"     \
+        ".code32                    \n"     \
+    "1:                             \n"     \
+     : : "i" (KERNEL_CS));
+
+#define switch_to_16bit() asm volatile(     \
+        "ljmp   %0,$1f              \n"     \
+        ".code16                    \n"     \
+    "1:                             \n"     \
+     : : "i" (KERNEL_16_CS));
 
 
 /* From within one type of code, execute 'stmt' in the other.
    These are safer and harder to screw up with than the above macros.  */
 #define i16_do_32bit(stmt) \
-	({	i16_switch_to_32bit(); \
-		{ stmt; } \
-		switch_to_16bit(); })
+    ({  i16_switch_to_32bit(); \
+        { stmt; } \
+        switch_to_16bit(); })
 #define do_16bit(stmt) \
-	({	switch_to_16bit(); \
-		{ stmt; } \
-		i16_switch_to_32bit(); })
+    ({  switch_to_16bit(); \
+        { stmt; } \
+        i16_switch_to_32bit(); })
 
 
 #endif _I386_I16_

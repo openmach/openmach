@@ -33,7 +33,6 @@
  */
 
 #include <cpus.h>
-#include <fpe.h>
 #include <i386/proc_reg.h>
 #include <i386/thread.h>
 

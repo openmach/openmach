@@ -1274,7 +1274,7 @@ MM	m;
 	int			port = sp->port;
 	u_short			count = 0;
 	u_short			bytes_in_msg;
-	static int		m_length();
+	static int		m_length;
 
 /* d-link 600 ON; d-link 600 ON; d-link 600 ON; d-link 600 ON */
 /* d-link 600 ON; d-link 600 ON; d-link 600 ON; d-link 600 ON */

@@ -183,8 +183,8 @@ CLEAN_FILES += $(GEN_CFILES) \
 		$(TARGET_CFLAGS) -x c -o $@ $<
 
 %.h: %.symc.o
-	sed <$< -e 's/^[^*].*$$//' | \
-		sed -e 's/^[*]/#define/' -e 's/mAgIc[^-0-9]*//' >$@
+	sed <$< -e '/*/!d' | \
+		sed -e 's/[*]/#define/' -e 's/mAgIc[^-0-9]*//' >$@
 
 CLEAN_FILES += *.symc *.symc.o
 

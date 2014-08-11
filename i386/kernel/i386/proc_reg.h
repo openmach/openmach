@@ -139,10 +139,10 @@ set_eflags(unsigned eflags)
    but it's often used immediately after setting one,
    to flush the instruction queue.  */
 #define flush_instr_queue() \
-	asm("
-		jmp	0f
-		0:
-	")
+	asm(					\
+		"	jmp	0f	    \n"	\
+		"0:			    \n"	\
+	)
 
 #endif	/* __GNUC__ */
 #endif	/* ASSEMBLER */

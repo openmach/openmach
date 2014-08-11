@@ -46,10 +46,10 @@ void boot_start(void)
 	copy_size = boot_kern_hdr.load_end_addr - boot_kern_hdr.load_addr;
 	if (copy_source > boot_kern_hdr.load_addr)
 	{
-		asm volatile("
-			cld
-			ljmp	%0
-		" :
+		asm volatile(
+			"	cld			\n"
+			"	ljmp	%0	\n"
+		  :
 		  : "mr" (ptr),		/* XXX r is inappropriate but gcc wants it */
 		    "a" (boot_kern_hdr.entry),
 		    "S" (copy_source),
@@ -61,10 +61,10 @@ void boot_start(void)
 	else
 	{
 		printf("(copying backwards...)\n"); /* XXX */
-		asm volatile("
-			std
-			ljmp	%0
-		" :
+		asm volatile(
+			"	std			\n"
+			"	ljmp	%0	\n"
+		  :
 		  : "mr" (ptr),		/* XXX r is inappropriate but gcc wants it */
 		    "a" (boot_kern_hdr.entry),
 		    "S" (copy_source + copy_size - 1),

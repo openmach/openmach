@@ -66,7 +66,7 @@ OBJFILES := i16_bootsect.o i16_setup.o $(filter-out i16_bootsect.o i16_setup.o,$
 
 linuxboot: $(OBJFILES)
 	$(LD) $(LDFLAGS) $(TARGET_LDFLAGS) \
-		-Ttext 0 -oformat binary -o $@ $(OBJFILES) -lmach_c
+		-Ttext 0 --oformat binary -o $@ $(OBJFILES) -lmach_c
 
 # For debugging - something you can 'nm' and 'gdb'.
 linuxboot.aout: $(OBJFILES)

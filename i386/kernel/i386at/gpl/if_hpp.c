@@ -60,14 +60,14 @@ static __inline void
 insw(u_short port, void *addr, int cnt)
 {
         __asm __volatile("cld\n\trepne\n\tinsw" :
-                         : "d" (port), "D" (addr), "c" (cnt) : "%edi", "%ecx");
+                         : "d" (port), "D" (addr), "c" (cnt) : "memory");
 }
 
 static __inline void
 outsw(u_short port, void *addr, int cnt)
 {
         __asm __volatile("cld\n\trepne\n\toutsw" :
-                         : "d" (port), "S" (addr), "c" (cnt) : "%esi", "%ecx");
+                         : "d" (port), "S" (addr), "c" (cnt) : "memory");
 }
 
 

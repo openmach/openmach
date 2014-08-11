@@ -61,7 +61,7 @@ $cc -c -o $outfile.mods.o $outfile.mods.S
 
 # Link the module vector file with the boot module files.
 # Use the binary bfd backend for both the input bmod files and the output file.
-$ld -Ttext 0 -oformat binary -o $outfile.tmp \
+$ld -Ttext 0 --oformat binary -o $outfile.tmp \
 	$outfile.mods.o -format binary $files -format default \
 	|| exit 1
 

@@ -28,7 +28,6 @@
  */
 
 #include <cpus.h>
-#include <fpe.h>
 #include <mach_kdb.h>
 #include <mach_ttd.h>
 #include <mach_pcsample.h>
@@ -1039,11 +1038,7 @@ i386_exception(exc, code, subcode)
 	ast_off(cpu_number(), AST_I386_FP);
 	splx(s);
 
-#if	FPE
-	fpe_exception_fixup(exc, code, subcode);
-#else
 	exception(exc, code, subcode);
-#endif
 	/*NOTREACHED*/
 }
 

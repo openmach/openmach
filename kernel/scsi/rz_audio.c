@@ -145,6 +145,8 @@ typedef struct red_list {
  * Forward decls
  */
 private void decode_status( char *buf, unsigned char audio_status );
+private void check_red_list(target_info_t *tgt, scsi2_inquiry_data_t *inq);
+
 void zero_ior( io_req_t );
 
 /*
@@ -201,7 +203,6 @@ cd_open(
 	 */
 	{
 	    scsi2_inquiry_data_t	*inq;
-	    private void 		check_red_list();
 
 	    scsi_inquiry(tgt, SCSI_INQ_STD_DATA);
 	    inq = (scsi2_inquiry_data_t*)tgt->cmd_ptr;

@@ -351,8 +351,8 @@ struct bus_device	*dev;
 		kmem_free(kernel_map, b_sram, sram_len);
 		return(0);
 	}
-	(volatile char *)pc_softc[unit].prom = (volatile char *)b_prom;
-	(volatile char *)pc_softc[unit].sram = (volatile char *)b_sram;
+	pc_softc[unit].prom = (volatile char *)b_prom;
+	pc_softc[unit].sram = (volatile char *)b_sram;
 	return(1);
 }
 
