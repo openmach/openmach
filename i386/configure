@@ -16,8 +16,6 @@ ac_help="$ac_help
 ac_help="$ac_help
   --enable-linuxdev       use Linux device drivers instead of Mach drivers"
 ac_help="$ac_help
-  --with-mach4=DIR        specify the location of the generic mach4 source tree"
-ac_help="$ac_help
   --enable-debug          enable internal debugging features and sanity checks"
 ac_help="$ac_help
   --enable-fipc		  enable fipc system calls"
@@ -457,7 +455,13 @@ fi
 
 echo $ac_n "checking for generic Mach 4 sources""... $ac_c" 1>&6
 # Check whether --with-mach4 or --without-mach4 was given.
-withval="$with_mach4"
+# 
+# NOTE: with the new dir structure, i386 is assumed to be a child
+#       of the mach4 src tree. So we are bypassing by setting the
+#       vars explicitly to be ".."
+#withval="$with_mach4"
+with_mach4=".."
+withval=".."
 if test -n "$withval"; then
   
 	gsrcdir=$with_mach4
