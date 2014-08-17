@@ -24,8 +24,12 @@
 *.x86_64
 *.hex
 
-# Cscope files
+# Cscope & ctags files
 cscope.*
+tags
+
+# Editor stuff
+*.swp
 
 # Object directory
 obj/
