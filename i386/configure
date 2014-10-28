@@ -1005,6 +1005,15 @@ else
 	AR="$target-ar"
 	RANLIB="$target-ranlib"
 	OBJCOPY="$target-objcopy"
+	HOST_CC=$CC
+	echo "building tools using $target toolchain"
+	echo "  CC=$CC"
+	echo "  LD=$LD"
+	echo "  STRIP=$STRIP"
+	echo "  AR=$AR"
+	echo "  RANLIB=$RANLIB"
+	echo "  OBJCOPY=$OBJCOPY"
+	echo "  HOST_CC=$HOST_CC"
 fi
 
 # Find the set of directories that have Makefile.in's in them.
