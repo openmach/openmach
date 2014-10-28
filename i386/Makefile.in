@@ -42,15 +42,11 @@ SRCTREES = $(MSRCDIR)
 
 BMODS = $(OBJDIR)/kernel/kernel $(OBJDIR)/bootstrap/bootstrap
 
-image: bsdimage linuximage
+image: bsdimage
 
 bsdimage: all
 	MACHBOOTDIR=`cd $(OBJDIR)/boot/bsd; pwd` \
 	$(OBJDIR)/boot/bsd/mkbsdimage -o $(OBJDIR)/Mach $(BMODS)
-
-linuximage: all
-	MACHBOOTDIR=`cd $(OBJDIR)/boot/linux; pwd` \
-	$(OBJDIR)/boot/linux/mklinuximage -o $(OBJDIR)/zMach $(BMODS)
 
 include $(GSRCDIR)/Makerules.top
 
