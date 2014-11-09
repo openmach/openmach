@@ -24,7 +24,7 @@
  * the rights to redistribute these changes.
  */
 
-#include <sys/varargs.h>
+#include <stdarg.h>
 
 static void
 savechar(arg, c)
@@ -34,24 +34,21 @@ savechar(arg, c)
 	*(*(char **)arg)++ = c;
 }
 
-vsprintf(s, fmt, args)
-	char *s;
-	char *fmt;
-	va_list args;
+vsprintf(char *s, char *fmt, ...)
 {
+	va_list args;
+	va_start(args, fmt);
+
 	_doprnt(fmt, args, 0, (void (*)()) savechar, (char *) &s);
 	*s = 0;
 }
 
 /*VARARGS2*/
-sprintf(s, fmt, va_alist)
-	char *s;
-	char *fmt;
-	va_dcl
+sprintf(char *s, char *fmt, ...)
 {
 	va_list	args;
+	va_start(args, fmt);
 
-	va_start(args);
 	vsprintf(s, fmt, args);
 	va_end(args);
 }

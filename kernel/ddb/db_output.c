@@ -36,7 +36,7 @@
  */
 
 #include <mach/boolean.h>
-#include <sys/varargs.h>
+#include <stdarg.h>
 #include <machine/db_machdep.h>
 #include <ddb/db_lex.h>
 #include <ddb/db_output.h>
@@ -209,16 +209,14 @@ extern void	_doprnt();
 
 /*VARARGS1*/
 void
-db_printf( fmt, va_alist)
-	char *	fmt;
-	va_dcl
+db_printf(char *fmt, ...)
 {
 	va_list	listp;
 
 #ifdef	db_printf_enter
 	db_printf_enter();	/* optional multiP serialization */
 #endif
-	va_start(listp);
+	va_start(listp, fmt);
 	_doprnt(fmt, &listp, db_id_putc, db_radix, 0);
 	va_end(listp);
 }
@@ -227,12 +225,10 @@ db_printf( fmt, va_alist)
 
 /*VARARGS1*/
 void
-kdbprintf(fmt, va_alist)
-	char *	fmt;
-	va_dcl
+kdbprintf(char *fmt, ...)
 {
 	va_list	listp;
-	va_start(listp);
+	va_start(listp, fmt);
 	_doprnt(fmt, &listp, db_id_putc, db_radix, 0);
 	va_end(listp);
 }

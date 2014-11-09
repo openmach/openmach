@@ -25,7 +25,7 @@
  */
 
 #include <mach/port.h>
-#include <sys/varargs.h>
+#include <stdarg.h>
 
 static mach_port_t master_host_port;
 
@@ -36,16 +36,14 @@ panic_init(port)
 }
 
 /*VARARGS1*/
-panic(s, va_alist)
-	char *s;
-	va_dcl
+panic(char *fmt, ...)
 {
-	va_list listp;
+	va_list args;
 
 	printf("panic: ");
-	va_start(listp);
-	vprintf(s, listp);
-	va_end(listp);
+	va_start(args, fmt);
+	vprintf(fmt, args);
+	va_end(args);
 	printf("\n");
 
 #ifdef PC532

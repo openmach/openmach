@@ -29,7 +29,7 @@
 
 #include <mach.h>
 #include <device/device.h>
-#include <sys/varargs.h>
+#include <stdarg.h>
 
 extern mach_port_t __libmach_console_port;
 

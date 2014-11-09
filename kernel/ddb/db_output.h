@@ -35,10 +35,4 @@
 extern void	db_force_whitespace();
 extern int	db_print_position();
 extern void	db_end_line();
-#if 1
-extern void	db_printf();
-#else
 extern void	db_printf( char *fmt, ...);
-#endif
-
-
