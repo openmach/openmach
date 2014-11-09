@@ -30,7 +30,7 @@
 
 #include "cpu_number.h"
 #include <kern/lock.h>
-#include <sys/varargs.h>
+#include <stdarg.h>
 #include <kern/thread.h>
 
 
@@ -120,9 +120,7 @@ panic_init()
 
 /*VARARGS1*/
 void
-panic(s, va_alist)
-	char *	s;
-	va_dcl
+panic(char *s, ...)
 {
 	va_list	listp;
 #if	NORMA_IPC
@@ -152,7 +150,7 @@ panic(s, va_alist)
 	printf("(cpu %U)", paniccpu);
 #endif
 	printf(": ");
-	va_start(listp);
+	va_start(listp, s);
 	_doprnt(s, &listp, cnputc, 0);
 	va_end(listp);
 	printf("\n");
@@ -169,17 +167,14 @@ panic(s, va_alist)
  */
 /*VARARGS2*/
 void
-log(level, fmt, va_alist)
-	int	level;
-	char *	fmt;
-	va_dcl
+log(int level, char *fmt, ...)
 {
 	va_list	listp;
 
 #ifdef lint
 	level++;
 #endif
-	va_start(listp);
+	va_start(listp, fmt);
 	_doprnt(fmt, &listp, cnputc, 0);
 	va_end(listp);
 }

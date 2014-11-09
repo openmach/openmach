@@ -27,7 +27,7 @@
  * Character subroutines
  */
 
-#include <sys/varargs.h>
+#include <stdarg.h>
 
 #define	EXPORT_BOOLEAN
 #include <mach/boolean.h>
@@ -40,15 +40,13 @@
  */
 /*VARARGS1*/
 char *
-strbuild(dest, va_alist)
-	register char *	dest;
-	va_dcl
+strbuild(char *dest, ...)
 {
 	va_list	argptr;
 	register char *	src;
 	register int	c;
 
-	va_start(argptr);
+	va_start(argptr, dest);
 	while ((src = va_arg(argptr, char *)) != (char *)0) {
 
 	    while ((c = *src++) != '\0')

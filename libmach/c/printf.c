@@ -27,7 +27,7 @@
  * the rights to redistribute these changes.
  */
 
-#include <sys/varargs.h>
+#include <stdarg.h>
 
 /* This version of printf is implemented in terms of putchar and puts.  */
 
@@ -77,11 +77,11 @@ printf_char(arg, c)
 /*
  * Printing (to console)
  */
-vprintf(fmt, args)
-	char *fmt;
-	va_list args;
+vprintf(char *fmt, ...)
 {
 	struct printf_state state;
+	va_list args;
+	va_start(args, fmt);
 
 	state.index = 0;
 	_doprnt(fmt, args, 0, (void (*)())printf_char, (char *) &state);
@@ -91,13 +91,10 @@ vprintf(fmt, args)
 }
 
 int
-printf(fmt, va_alist)
-	char *fmt;
-	va_dcl
+printf(char *fmt, ...)
 {
 	va_list	args;
-
-	va_start(args);
+	va_start(args, fmt);
 	vprintf(fmt, args);
 	va_end(args);
 }

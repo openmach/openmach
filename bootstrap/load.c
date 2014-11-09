@@ -25,8 +25,8 @@
  */
 
 #include <assert.h>
+#include <stdarg.h>
 #include <mach/mach_interface.h>
-#include <sys/varargs.h>
 #include <mach/exec/exec.h>
 
 #include <file_io.h>
@@ -149,19 +149,14 @@ static int prog_read_exec(void *handle, vm_offset_t file_ofs, vm_size_t file_siz
 }
 
 /*VARARGS4*/
-int boot_load_program(master_host_port,
-		      master_device_port,
-		      user_task,
-		      user_thread,
-		      server_dir_name,
-		      va_alist)	/* first component is program name */
-	mach_port_t	master_host_port;
-	mach_port_t	master_device_port;
-	thread_t	user_thread;
-	char		*server_dir_name;
-	va_dcl
+int boot_load_program(mach_port_t master_host_port,
+		      mach_port_t master_device_port,
+		      task_t user_task,
+		      thread_t user_thread,
+		      char *server_dir_name,
+		      ...)	/* first component is program name */
 {
-	va_list			argv_ptr;
+	va_list argv_ptr;
 	char *			arg_ptr;
 
 	int			arg_len;
@@ -183,7 +178,7 @@ int boot_load_program(master_host_port,
 	/*
 	 * Get the target file name
 	 */
-	va_start(argv_ptr);
+	va_start(arg_ptr, server_dir_name);
 	file_name = va_arg(argv_ptr, char *);
 	va_end(argv_ptr);
 
@@ -208,7 +203,7 @@ int boot_load_program(master_host_port,
 	/*
 	 * Calculate the size of the argument list.
 	 */
-	va_start(argv_ptr);
+	va_start(argv_ptr, server_dir_name);
 	arg_len = 0;
 	arg_count = 0;
 	for (;;) {
@@ -330,7 +325,7 @@ printf("loaded; entrypoint %08x\n", info.entry);
 	    /*
 	     * Then the strings and string pointers for each argument
 	     */
-	    va_start(argv_ptr);
+	    va_start(argv_ptr, server_dir_name);
 	    for (i = 0; i < arg_count; i++) {
 		arg_ptr = va_arg(argv_ptr, char *);
 		arg_item_len = strlen(arg_ptr) + 1; /* include trailing 0 */

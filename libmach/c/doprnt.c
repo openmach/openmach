@@ -26,7 +26,7 @@
 
 #define EXPORT_BOOLEAN
 #include <mach/boolean.h>
-#include <sys/varargs.h>
+#include <stdarg.h>
 
 /*
  *  Common code for printf et al.
