@@ -170,6 +170,7 @@ itoa(
 static void get_compat_strings(char *flags_str, char *root_str)
 {
 	register char *ip, *cp;
+    root_str[0] = '\0';
 
 	cp = flags_str;
 	*cp++ = '-';
@@ -263,10 +264,8 @@ static int read_exec(void *handle, vm_offset_t file_ofs, vm_size_t file_size,
 	start_page = trunc_page(mem_addr);
 	end_page = round_page(mem_addr + mem_size);
 
-	/*
 	printf("reading bootstrap section %08x-%08x-%08x prot %d pages %08x-%08x\n",
 		mem_addr, mem_addr+file_size, mem_addr+mem_size, mem_prot, start_page, end_page);
-	*/
 
 	err = vm_allocate(user_map, &start_page, end_page - start_page, FALSE);
 	assert(err == 0);

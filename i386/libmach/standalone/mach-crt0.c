@@ -85,7 +85,7 @@ int	exit();
 
 extern	unsigned char	etext;
 extern	unsigned char	_eprol;
-void _start()
+void _start(int argc, char *sargv[])
 {
 	struct kframe {
 		int	kargc;
@@ -100,24 +100,35 @@ void _start()
 	register char **targv;
 	register char **argv;
 
+/*
 #ifdef lint
 	kfp = 0;
 	initcode = initcode = 0;
 #else not lint
+*/
+
+/*
 #define Entry_sp() \
 ({ int _spl__, _tmp1__; \
 	__asm volatile("leal 4(%%ebp), %0" : "=r" (_spl__) : "r" (_tmp1__)); \
 	_spl__; })
 
 	kfp = (struct kframe *)Entry_sp();
-#endif not lint
+*/
+
+/*#endif not lint */
+
+	kfp = (struct kframe *) &argc;
+
 	for (argv = targv = &kfp->kargv[0]; *targv++; /* void */)
 		/* void */ ;
 	if (targv >= (char **)(*argv))
 		--targv;
 	environ = targv;
+
 	if (mach_init_routine)
 		(void) mach_init_routine();
+
 
 #ifndef __ELF__ /* XXX */
 __asm(".globl __eprol");
