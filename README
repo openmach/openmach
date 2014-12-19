@@ -79,7 +79,7 @@ directory and put a server into it.
 Cross Compilation
 -----------------
 
-With this build environment you can easly cross compile Mach from a different
+With this build environment you can easily cross compile Mach from a different
 architecture and/or OS.  To cross compile from a different (non-Mach) OS but
 on the same processor architecture, you normally shouldn't have to do anything
 special; the "normal" procedure above is known to work on Linux anyway.
